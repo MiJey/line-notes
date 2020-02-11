@@ -3,6 +3,7 @@ package dev.mijey.linenotes
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.note_list_item.view.*
@@ -27,11 +28,31 @@ class NoteListAdapter(private val mainActivity: MainActivity, private var notes:
         (holder as Item).bindData(notes[position], position)
     }
 
-    class Item(var mainActivity: MainActivity, itemView: View) : RecyclerView.ViewHolder(itemView) {
+    inner class Item(var mainActivity: MainActivity, itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bindData(note: Note, pos: Int) {
-            itemView.note_list_item_title.text = note.title
+            itemView.note_list_item_title.text = "$pos ${note.title}"
             itemView.note_list_item_text_preview.text = note.text
             itemView.note_list_item_thumbnail
+
+            if (mainActivity.isEditMode) {
+                itemView.note_list_item_check.visibility = View.VISIBLE
+
+                if (note.isChecked) {
+                    itemView.note_list_item_check.setBackgroundColor(ContextCompat.getColor(mainActivity, R.color.colorAccent))
+                } else {
+                    itemView.note_list_item_check.setBackgroundColor(ContextCompat.getColor(mainActivity, R.color.colorPrimaryDark))
+                }
+
+                itemView.note_list_item.setOnClickListener {
+                    note.isChecked = !note.isChecked
+                    notifyItemChanged(pos)
+                }
+            } else {
+                itemView.note_list_item_check.visibility = View.GONE
+                note.isChecked = false
+            }
+
+
         }
     }
 }

@@ -29,6 +29,8 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
+    var isEditMode = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -39,6 +41,27 @@ class MainActivity : AppCompatActivity() {
         note_list.adapter = NoteListAdapter(this, noteList)
         note_list.hasFixedSize()
 
+        // 편집, 삭제
+        tool_bar_action_button.setOnClickListener {
+            isEditMode = !isEditMode
+
+            if (isEditMode) {
+                tool_bar_action_button.text = resources.getString(R.string.delete)
+            } else {
+                // 선택한 노트 삭제
+                val iter = noteList.iterator()
+                while (iter.hasNext()) {
+                    if (iter.next().isChecked)
+                        iter.remove()
+                }
+
+                tool_bar_action_button.text = resources.getString(R.string.edit)
+            }
+
+            note_list.adapter?.notifyDataSetChanged()
+        }
+
+        // 새 노트
         add_note_button.setOnClickListener {
             // TODO 새 노트
             noteList.add(0, Note(System.currentTimeMillis()))

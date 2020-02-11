@@ -1,6 +1,7 @@
 package dev.mijey.linenotes
 
 class Note {
+    var isChecked = false
     var title = ""
     var text = ""
     val images = ArrayList<String>()

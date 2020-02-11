@@ -30,7 +30,7 @@
             android:layout_height="0dp"
             android:gravity="center"
             android:padding="16dp"
-            android:text="@string/delete"
+            android:text="@string/edit"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
