@@ -2,6 +2,7 @@ package dev.mijey.linenotes
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import kotlinx.android.synthetic.main.activity_main.*
 
 /**
  * 기능 요구사항
@@ -31,5 +32,20 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        val noteList = ArrayList<Note>()
+        // TODO 최근 날짜가 맨 위로 올라오도록 파일 불러오기
+
+        note_list.adapter = NoteListAdapter(this, noteList)
+        note_list.hasFixedSize()
+
+        add_note_button.setOnClickListener {
+            // TODO 새 노트
+            noteList.add(0, Note(System.currentTimeMillis()))
+            noteList.add(0, Note(System.currentTimeMillis()))
+            noteList.add(0, Note(System.currentTimeMillis()))
+
+            note_list.adapter?.notifyDataSetChanged()
+        }
     }
 }
