@@ -42,11 +42,11 @@ class MainActivity : AppCompatActivity() {
         note_list.hasFixedSize()
 
         // 편집, 삭제
-        tool_bar_action_button.setOnClickListener {
+        main_tool_bar_action_button.setOnClickListener {
             isEditMode = !isEditMode
 
             if (isEditMode) {
-                tool_bar_action_button.text = resources.getString(R.string.delete)
+                main_tool_bar_action_button.text = resources.getString(R.string.delete)
             } else {
                 // 선택한 노트 삭제
                 val iter = noteList.iterator()
@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity() {
                         iter.remove()
                 }
 
-                tool_bar_action_button.text = resources.getString(R.string.edit)
+                main_tool_bar_action_button.text = resources.getString(R.string.edit)
             }
 
             note_list.adapter?.notifyDataSetChanged()

@@ -1,5 +1,6 @@
 package dev.mijey.linenotes
 
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -50,9 +51,13 @@ class NoteListAdapter(private val mainActivity: MainActivity, private var notes:
             } else {
                 itemView.note_list_item_check.visibility = View.GONE
                 note.isChecked = false
+
+                itemView.setOnClickListener {
+                    val detailIntent = Intent(mainActivity, NoteDetailActivity::class.java)
+                    detailIntent.putExtra("timestamp", note.modifiedTimestamp)
+                    mainActivity.startActivity(detailIntent)
+                }
             }
-
-
         }
     }
 }

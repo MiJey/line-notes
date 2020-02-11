@@ -6,8 +6,8 @@ class Note {
     var text = ""
     val images = ArrayList<String>()
 
-    private val createdTimestamp: Long
-    private val modifiedTimestamp: Long
+    val createdTimestamp: Long
+    val modifiedTimestamp: Long // filename
 
     constructor(timestamp: Long) {
         this.createdTimestamp = timestamp
