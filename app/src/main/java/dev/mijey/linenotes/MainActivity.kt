@@ -1,5 +1,6 @@
 package dev.mijey.linenotes
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import kotlinx.android.synthetic.main.activity_main.*
@@ -64,11 +65,12 @@ class MainActivity : AppCompatActivity() {
         // 새 노트
         add_note_button.setOnClickListener {
             // TODO 새 노트
-            noteList.add(0, Note(System.currentTimeMillis()))
-            noteList.add(0, Note(System.currentTimeMillis()))
-            noteList.add(0, Note(System.currentTimeMillis()))
-
-            note_list.adapter?.notifyDataSetChanged()
+//            noteList.add(0, Note(System.currentTimeMillis()))
+//            noteList.add(0, Note(System.currentTimeMillis()))
+//            noteList.add(0, Note(System.currentTimeMillis()))
+//
+//            note_list.adapter?.notifyDataSetChanged()
+            startActivity(Intent(this, NoteDetailActivity::class.java))
         }
     }
 }

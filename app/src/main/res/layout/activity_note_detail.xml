@@ -15,16 +15,25 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
+        <TextView
+            android:id="@+id/detail_tool_bar_action_button"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:padding="16dp"
+            android:text="@string/edit"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <TextView
+    <EditText
         android:id="@+id/detail_title"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="title"
-        app:layout_constraintTop_toBottomOf="@+id/detail_tool_bar"
+        android:hint="@string/enter_title"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintTop_toBottomOf="@+id/detail_tool_bar" />
 
     <ImageView
         android:id="@+id/detail_image"
@@ -36,12 +45,12 @@
         app:layout_constraintTop_toBottomOf="@+id/detail_title"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <TextView
+    <EditText
         android:id="@+id/detail_text"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="texttexttexttexttexttexttexttexttexttexttexttext"
-        app:layout_constraintStart_toStartOf="parent"
+        android:hint="@string/enter_text"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/detail_image"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/detail_image" />
 </androidx.constraintlayout.widget.ConstraintLayout>
