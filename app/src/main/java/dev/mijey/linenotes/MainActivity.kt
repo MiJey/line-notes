@@ -1,6 +1,5 @@
 package dev.mijey.linenotes
 
-import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import kotlinx.android.synthetic.main.activity_main.*
@@ -30,17 +29,23 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
+    private var noteDB : NoteDatabase? = null
+    private var noteList = ArrayList<Note>()
     var isEditMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val noteList = ArrayList<Note>()
-        // TODO 최근 날짜가 맨 위로 올라오도록 파일 불러오기
+        // DB 가져오기
+        noteDB = NoteDatabase.getInstance(this)
 
-        note_list.adapter = NoteListAdapter(this, noteList)
-        note_list.hasFixedSize()
+        Thread {
+            noteList = ArrayList(noteDB?.noteDao()?.getAll() ?: return@Thread)
+
+            note_list.adapter = NoteListAdapter(this, noteList)
+            note_list.hasFixedSize()
+        }.start()
 
         // 편집, 삭제
         main_tool_bar_action_button.setOnClickListener {
@@ -52,7 +57,7 @@ class MainActivity : AppCompatActivity() {
                 // 선택한 노트 삭제
                 val iter = noteList.iterator()
                 while (iter.hasNext()) {
-                    if (iter.next().isChecked)
+                    if (iter.next().isSelected)
                         iter.remove()
                 }
 
@@ -64,13 +69,16 @@ class MainActivity : AppCompatActivity() {
 
         // 새 노트
         add_note_button.setOnClickListener {
-            // TODO 새 노트
-//            noteList.add(0, Note(System.currentTimeMillis()))
-//            noteList.add(0, Note(System.currentTimeMillis()))
-//            noteList.add(0, Note(System.currentTimeMillis()))
-//
-//            note_list.adapter?.notifyDataSetChanged()
-            startActivity(Intent(this, NoteDetailActivity::class.java))
+            Thread {
+                val newNote = Note(System.currentTimeMillis())
+                noteDB?.noteDao()?.insert(newNote)
+            }.start()
+            // startActivity(Intent(this, NoteDetailActivity::class.java))
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        note_list.adapter?.notifyDataSetChanged()
     }
 }

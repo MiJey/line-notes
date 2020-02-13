@@ -1,19 +1,27 @@
 package dev.mijey.linenotes
 
-class Note {
-    var isChecked = false
-    var title = ""
-    var text = ""
-    val images = ArrayList<String>()
+import androidx.room.Entity
+import androidx.room.Ignore
+import androidx.room.PrimaryKey
+import androidx.room.TypeConverters
 
-    val createdTimestamp: Long
-    val modifiedTimestamp: Long // filename
+@Entity
+@TypeConverters(Converters::class)
+data class Note(
+    @PrimaryKey val createdTimestamp: Long,
+    var modifiedTimestamp: Long,
+    var title: String,
+    var text: String,
+    val images: ArrayList<String>   // 이미지 filename list
+) {
+    @Ignore
+    var isSelected = false
 
-    constructor(timestamp: Long) {
-        this.createdTimestamp = timestamp
-        this.modifiedTimestamp = timestamp
-
-        this.title = "샘플 타이틀 $timestamp"
-        this.text = "샘플 내용 $timestamp 샘플 내용 $timestamp 샘플 내용 $timestamp"
-    }
+    constructor(timestamp: Long) : this(
+        createdTimestamp = timestamp,
+        modifiedTimestamp = timestamp,
+        title = "샘플 타이틀 $timestamp",
+        text = "샘플 내용 $timestamp 샘플 내용 $timestamp 샘플 내용 $timestamp",
+        images = ArrayList<String>()
+    )
 }

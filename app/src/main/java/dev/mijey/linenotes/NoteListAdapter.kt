@@ -38,19 +38,19 @@ class NoteListAdapter(private val mainActivity: MainActivity, private var notes:
             if (mainActivity.isEditMode) {
                 itemView.note_list_item_check.visibility = View.VISIBLE
 
-                if (note.isChecked) {
+                if (note.isSelected) {
                     itemView.note_list_item_check.setBackgroundColor(ContextCompat.getColor(mainActivity, R.color.colorAccent))
                 } else {
                     itemView.note_list_item_check.setBackgroundColor(ContextCompat.getColor(mainActivity, R.color.colorPrimaryDark))
                 }
 
                 itemView.note_list_item.setOnClickListener {
-                    note.isChecked = !note.isChecked
+                    note.isSelected = !note.isSelected
                     notifyItemChanged(pos)
                 }
             } else {
                 itemView.note_list_item_check.visibility = View.GONE
-                note.isChecked = false
+                note.isSelected = false
 
                 itemView.setOnClickListener {
                     val detailIntent = Intent(mainActivity, NoteDetailActivity::class.java)
