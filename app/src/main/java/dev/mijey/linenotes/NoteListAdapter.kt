@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.note_list_item.view.*
 import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.util.*
 
 class NoteListAdapter(private val mainActivity: MainActivity) :
@@ -34,9 +35,9 @@ class NoteListAdapter(private val mainActivity: MainActivity) :
 
             // TODO 오늘 변경사항은 날짜 말고 시간으로 보여주기
             val createdDate =
-                DateFormat.getDateInstance(DateFormat.LONG).format(Date(note.createdTimestamp))
+                SimpleDateFormat("yyyy년 MM월 dd일 HH:mm:ss").format(note.createdTimestamp) // DateFormat.getDateInstance(DateFormat.LONG).format(Date(note.createdTimestamp))
             val modifiedDate =
-                DateFormat.getDateInstance(DateFormat.LONG).format(Date(note.modifiedTimestamp))
+                SimpleDateFormat("yyyy년 MM월 dd일 HH:mm:ss").format(note.modifiedTimestamp) // DateFormat.getDateInstance(DateFormat.LONG).format(Date(note.modifiedTimestamp))
             itemView.note_list_item_date.text =
                 "${mainActivity.resources.getString(R.string.modified_date)}: $modifiedDate / ${mainActivity.resources.getString(
                     R.string.created_date
@@ -69,10 +70,11 @@ class NoteListAdapter(private val mainActivity: MainActivity) :
                 itemView.note_list_item_check.visibility = View.GONE
                 note.isSelected = false
 
+                // 노트 편집
                 itemView.setOnClickListener {
                     val detailIntent = Intent(mainActivity, NoteDetailActivity::class.java)
-                    detailIntent.putExtra("timestamp", note.modifiedTimestamp)
-                    mainActivity.startActivity(detailIntent)
+                    detailIntent.putExtra("note", note)
+                    mainActivity.startActivityForResult(detailIntent, NoteDetailActivity.EDIT_NOTE_REQUEST_CODE)
                 }
             }
         }

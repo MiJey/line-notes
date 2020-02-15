@@ -2,7 +2,6 @@ package dev.mijey.linenotes
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
@@ -100,25 +99,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        Log.d("yeji", "onActivityResult: requestCode: $requestCode, resultCode: $resultCode")
+
         // 변경된 노트 저장
         if (requestCode == NoteDetailActivity.EDIT_NOTE_REQUEST_CODE && resultCode == NoteDetailActivity.EDIT_NOTE_RESULT_CODE) {
-            // TODO Parcelable로 바꾸기
-            data ?: return
-            val createdTimestamp = data.getLongExtra("createdTimestamp", 0L)
-            val modifiedTimestamp = data.getLongExtra("modifiedTimestamp", 0L)
-            val title = data.getStringExtra("title")
-            val text = data.getStringExtra("text")
-
-            mNoteViewModel?.insert(
-                Note(
-                    createdTimestamp = createdTimestamp,
-                    modifiedTimestamp = modifiedTimestamp,
-                    title = title,
-                    text = text,
-                    images = ArrayList<String>()
-                )
-            )
+            val note = data?.getParcelableExtra<Note>("note") ?: return
+            mNoteViewModel?.insert(note)
         }
     }
 }

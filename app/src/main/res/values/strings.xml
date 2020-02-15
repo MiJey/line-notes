@@ -14,4 +14,5 @@
 
     <string name="created_date">만든 날짜</string>
     <string name="modified_date">수정 날짜</string>
+    <string name="last_modify">마지막 수정</string>
 </resources>
