@@ -13,12 +13,13 @@ abstract class NoteDatabase : RoomDatabase() {
         var INSTANCE: NoteDatabase? = null
 
         fun getInstance(context: Context): NoteDatabase? {
-            if (INSTANCE == null) {
-                INSTANCE = Room.databaseBuilder(context.applicationContext, NoteDatabase::class.java, "notes.db")
-                    .fallbackToDestructiveMigration()
-                    .build()
+            return INSTANCE ?: synchronized(NoteDatabase::class) {
+                INSTANCE ?: Room.databaseBuilder(
+                    context.applicationContext,
+                    NoteDatabase::class.java,
+                    "notes.db"
+                ).build().also { INSTANCE = it }
             }
-            return INSTANCE
         }
 
         fun destroyInstance() {

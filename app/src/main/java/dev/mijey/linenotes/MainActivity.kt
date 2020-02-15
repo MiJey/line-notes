@@ -1,8 +1,12 @@
 package dev.mijey.linenotes
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import kotlinx.android.synthetic.main.activity_main.*
+
 
 /**
  * 기능 요구사항
@@ -30,8 +34,10 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity() {
 
     private var noteDB : NoteDatabase? = null
-    private var noteList = ArrayList<Note>()
+    private var noteList: LiveData<List<Note>>? = null
     var isEditMode = false
+    private var mNoteViewModel: NoteViewModel? = null
+    private var mNoteListAdapter: NoteListAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,12 +45,19 @@ class MainActivity : AppCompatActivity() {
 
         // DB 가져오기
         noteDB = NoteDatabase.getInstance(this)
+        mNoteViewModel = ViewModelProvider(this)[NoteViewModel::class.java]
+
+        mNoteListAdapter = NoteListAdapter(this)
+        note_list.adapter = mNoteListAdapter
+        note_list.hasFixedSize()
+
+        mNoteViewModel?.getAllNotes()?.observe(this,
+            Observer<List<Note>> { notes ->
+                mNoteListAdapter?.setNotes(notes)
+            })
 
         Thread {
-            noteList = ArrayList(noteDB?.noteDao()?.getAll() ?: return@Thread)
-
-            note_list.adapter = NoteListAdapter(this, noteList)
-            note_list.hasFixedSize()
+            noteList = noteDB?.noteDao()?.getAll() ?: return@Thread
         }.start()
 
         // 편집, 삭제
@@ -55,11 +68,11 @@ class MainActivity : AppCompatActivity() {
                 main_tool_bar_action_button.text = resources.getString(R.string.delete)
             } else {
                 // 선택한 노트 삭제
-                val iter = noteList.iterator()
-                while (iter.hasNext()) {
-                    if (iter.next().isSelected)
-                        iter.remove()
-                }
+//                val iter = noteList.iterator()
+//                while (iter.hasNext()) {
+//                    if (iter.next().isSelected)
+//                        iter.remove()
+//                }
 
                 main_tool_bar_action_button.text = resources.getString(R.string.edit)
             }
@@ -69,11 +82,13 @@ class MainActivity : AppCompatActivity() {
 
         // 새 노트
         add_note_button.setOnClickListener {
-            Thread {
-                val newNote = Note(System.currentTimeMillis())
-                noteDB?.noteDao()?.insert(newNote)
-            }.start()
+//            Thread {
+//                val newNote = Note(System.currentTimeMillis())
+//                noteDB?.noteDao()?.insert(newNote)
+//            }.start()
             // startActivity(Intent(this, NoteDetailActivity::class.java))
+
+            mNoteViewModel?.insert(Note(System.currentTimeMillis()))
         }
     }
 

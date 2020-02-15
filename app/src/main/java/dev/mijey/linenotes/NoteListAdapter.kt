@@ -9,8 +9,11 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.note_list_item.view.*
 
-class NoteListAdapter(private val mainActivity: MainActivity, private var notes: ArrayList<Note>) :
+class NoteListAdapter(private val mainActivity: MainActivity) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+    private var mNotes: List<Note>? = null
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val v = LayoutInflater.from(mainActivity).inflate(R.layout.note_list_item, parent, false)
         return Item(mainActivity, v)
@@ -19,14 +22,20 @@ class NoteListAdapter(private val mainActivity: MainActivity, private var notes:
     override fun getItemViewType(position: Int): Int = 0
 
     override fun getItemCount(): Int {
-        if (notes.size == 0) mainActivity.empty_view.visibility = View.VISIBLE
+        val cnt = mNotes?.size ?: 0
+        if (cnt == 0) mainActivity.empty_view.visibility = View.VISIBLE
         else mainActivity.empty_view.visibility = View.GONE
 
-        return notes.size
+        return cnt
+    }
+
+    fun setNotes(notes: List<Note>) {
+        mNotes = notes
+        notifyDataSetChanged()
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        (holder as Item).bindData(notes[position], position)
+        (holder as Item).bindData(mNotes?.get(position) ?: return, position)
     }
 
     inner class Item(var mainActivity: MainActivity, itemView: View) : RecyclerView.ViewHolder(itemView) {
