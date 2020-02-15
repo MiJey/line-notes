@@ -1,6 +1,8 @@
 package dev.mijey.linenotes
 
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
@@ -33,7 +35,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
-    private var noteDB : NoteDatabase? = null
+    private var noteDB: NoteDatabase? = null
     private var noteList: LiveData<List<Note>>? = null
     var isEditMode = false
     private var mNoteViewModel: NoteViewModel? = null
@@ -43,8 +45,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // DB 가져오기
-        noteDB = NoteDatabase.getInstance(this)
+        //
         mNoteViewModel = ViewModelProvider(this)[NoteViewModel::class.java]
 
         mNoteListAdapter = NoteListAdapter(this)
@@ -55,6 +56,9 @@ class MainActivity : AppCompatActivity() {
             Observer<List<Note>> { notes ->
                 mNoteListAdapter?.setNotes(notes)
             })
+
+        // DB 가져오기
+        noteDB = NoteDatabase.getInstance(this)
 
         Thread {
             noteList = noteDB?.noteDao()?.getAll() ?: return@Thread
@@ -82,18 +86,39 @@ class MainActivity : AppCompatActivity() {
 
         // 새 노트
         add_note_button.setOnClickListener {
-//            Thread {
-//                val newNote = Note(System.currentTimeMillis())
-//                noteDB?.noteDao()?.insert(newNote)
-//            }.start()
-            // startActivity(Intent(this, NoteDetailActivity::class.java))
-
-            mNoteViewModel?.insert(Note(System.currentTimeMillis()))
+            startActivityForResult(
+                Intent(this, NoteDetailActivity::class.java),
+                NoteDetailActivity.EDIT_NOTE_REQUEST_CODE
+            )
         }
     }
 
     override fun onResume() {
         super.onResume()
         note_list.adapter?.notifyDataSetChanged()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        Log.d("yeji", "onActivityResult: requestCode: $requestCode, resultCode: $resultCode")
+        // 변경된 노트 저장
+        if (requestCode == NoteDetailActivity.EDIT_NOTE_REQUEST_CODE && resultCode == NoteDetailActivity.EDIT_NOTE_RESULT_CODE) {
+            // TODO Parcelable로 바꾸기
+            data ?: return
+            val createdTimestamp = data.getLongExtra("createdTimestamp", 0L)
+            val modifiedTimestamp = data.getLongExtra("modifiedTimestamp", 0L)
+            val title = data.getStringExtra("title")
+            val text = data.getStringExtra("text")
+
+            mNoteViewModel?.insert(
+                Note(
+                    createdTimestamp = createdTimestamp,
+                    modifiedTimestamp = modifiedTimestamp,
+                    title = title,
+                    text = text,
+                    images = ArrayList<String>()
+                )
+            )
+        }
     }
 }

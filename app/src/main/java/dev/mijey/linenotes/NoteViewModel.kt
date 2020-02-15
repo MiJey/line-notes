@@ -4,7 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 
-class NoteViewModel(application: Application): AndroidViewModel(application) {
+class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val mRepository = NoteRepository(application)
     private val mAllNotes = mRepository.mAllNotes
 

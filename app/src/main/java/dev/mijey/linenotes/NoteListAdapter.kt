@@ -8,6 +8,8 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.note_list_item.view.*
+import java.text.DateFormat
+import java.util.*
 
 class NoteListAdapter(private val mainActivity: MainActivity) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -19,38 +21,44 @@ class NoteListAdapter(private val mainActivity: MainActivity) :
         return Item(mainActivity, v)
     }
 
-    override fun getItemViewType(position: Int): Int = 0
-
-    override fun getItemCount(): Int {
-        val cnt = mNotes?.size ?: 0
-        if (cnt == 0) mainActivity.empty_view.visibility = View.VISIBLE
-        else mainActivity.empty_view.visibility = View.GONE
-
-        return cnt
-    }
-
-    fun setNotes(notes: List<Note>) {
-        mNotes = notes
-        notifyDataSetChanged()
-    }
-
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         (holder as Item).bindData(mNotes?.get(position) ?: return, position)
     }
 
-    inner class Item(var mainActivity: MainActivity, itemView: View) : RecyclerView.ViewHolder(itemView) {
+    inner class Item(var mainActivity: MainActivity, itemView: View) :
+        RecyclerView.ViewHolder(itemView) {
         fun bindData(note: Note, pos: Int) {
             itemView.note_list_item_title.text = "$pos ${note.title}"
             itemView.note_list_item_text_preview.text = note.text
             itemView.note_list_item_thumbnail
 
+            // TODO 오늘 변경사항은 날짜 말고 시간으로 보여주기
+            val createdDate =
+                DateFormat.getDateInstance(DateFormat.LONG).format(Date(note.createdTimestamp))
+            val modifiedDate =
+                DateFormat.getDateInstance(DateFormat.LONG).format(Date(note.modifiedTimestamp))
+            itemView.note_list_item_date.text =
+                "${mainActivity.resources.getString(R.string.modified_date)}: $modifiedDate / ${mainActivity.resources.getString(
+                    R.string.created_date
+                )}: $createdDate"
+
             if (mainActivity.isEditMode) {
                 itemView.note_list_item_check.visibility = View.VISIBLE
 
                 if (note.isSelected) {
-                    itemView.note_list_item_check.setBackgroundColor(ContextCompat.getColor(mainActivity, R.color.colorAccent))
+                    itemView.note_list_item_check.setBackgroundColor(
+                        ContextCompat.getColor(
+                            mainActivity,
+                            R.color.colorAccent
+                        )
+                    )
                 } else {
-                    itemView.note_list_item_check.setBackgroundColor(ContextCompat.getColor(mainActivity, R.color.colorPrimaryDark))
+                    itemView.note_list_item_check.setBackgroundColor(
+                        ContextCompat.getColor(
+                            mainActivity,
+                            R.color.colorPrimaryDark
+                        )
+                    )
                 }
 
                 itemView.note_list_item.setOnClickListener {
@@ -68,5 +76,20 @@ class NoteListAdapter(private val mainActivity: MainActivity) :
                 }
             }
         }
+    }
+
+    override fun getItemViewType(position: Int): Int = 0
+
+    override fun getItemCount(): Int {
+        val cnt = mNotes?.size ?: 0
+        if (cnt == 0) mainActivity.empty_view.visibility = View.VISIBLE
+        else mainActivity.empty_view.visibility = View.GONE
+
+        return cnt
+    }
+
+    fun setNotes(notes: List<Note>) {
+        mNotes = notes
+        notifyDataSetChanged()
     }
 }

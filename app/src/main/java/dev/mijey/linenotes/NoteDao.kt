@@ -9,7 +9,7 @@ import androidx.room.Query
 
 @Dao
 interface NoteDao {
-    @Query("SELECT * FROM note ORDER BY createdTimestamp DESC")
+    @Query("SELECT * FROM note ORDER BY modifiedTimestamp DESC")
     fun getAll(): LiveData<List<Note>>
 
 //    @Query("SELECT * FROM note WHERE createdTimestamp IN (:userIds)")
