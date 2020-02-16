@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".NoteDetailActivity">
+    tools:context=".detail.NoteDetailActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/detail_tool_bar"
@@ -15,12 +15,24 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
+        <ImageView
+            android:id="@+id/detail_tool_bar_add_image"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:padding="16dp"
+            android:src="@drawable/ic_insert_photo_white_24dp"
+            android:tooltipText="@string/add_image"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/detail_tool_bar_action_button"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
             android:id="@+id/detail_tool_bar_action_button"
             android:layout_width="wrap_content"
             android:layout_height="0dp"
             android:padding="16dp"
-            android:text="@string/edit"
+            android:src="@drawable/ic_edit_white_24dp"
+            android:tooltipText="@string/edit"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -45,12 +57,13 @@
                 android:layout_height="wrap_content"
                 android:hint="@string/enter_title" />
 
-            <ImageView
-                android:id="@+id/detail_image"
-                android:layout_width="wrap_content"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/detail_image_list"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="#009"
-                android:src="@drawable/ic_launcher_foreground" />
+                android:background="#900"
+                android:orientation="horizontal"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
             <EditText
                 android:id="@+id/detail_text"

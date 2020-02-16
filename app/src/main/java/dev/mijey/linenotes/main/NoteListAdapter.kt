@@ -1,4 +1,4 @@
-package dev.mijey.linenotes
+package dev.mijey.linenotes.main
 
 import android.content.Intent
 import android.view.LayoutInflater
@@ -6,11 +6,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import dev.mijey.linenotes.Note
+import dev.mijey.linenotes.R
+import dev.mijey.linenotes.detail.NoteDetailActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.note_list_item.view.*
-import java.text.DateFormat
 import java.text.SimpleDateFormat
-import java.util.*
 
 class NoteListAdapter(private val mainActivity: MainActivity) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {

@@ -1,4 +1,4 @@
-package dev.mijey.linenotes
+package dev.mijey.linenotes.main
 
 import android.content.Intent
 import android.os.Bundle
@@ -6,6 +6,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import dev.mijey.linenotes.*
+import dev.mijey.linenotes.detail.NoteDetailActivity
 import kotlinx.android.synthetic.main.activity_main.*
 
 
@@ -44,7 +46,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        //
         mNoteViewModel = ViewModelProvider(this)[NoteViewModel::class.java]
 
         mNoteListAdapter = NoteListAdapter(this)
