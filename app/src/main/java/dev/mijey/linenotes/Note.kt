@@ -6,7 +6,6 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
-import org.json.JSONArray
 
 @Entity
 @TypeConverters(Converters::class)
@@ -15,20 +14,25 @@ data class Note(
     var modifiedTimestamp: Long = 0L,
     var title: String = "",
     var text: String = "",
-    val images: ArrayList<String> = ArrayList()   // 이미지 filename list
-): Parcelable {
+
+    // 내부저장소에 폴더명이 createdTimestamp인 폴더 안에 이미지들을 저장해둠
+    // ex) "${context.filesDir}/$createdTimestamp/${images[i]}"
+    // ex) /data/user/0/dev.mijey.linenotes/files/1581791454985/20200218_090227.png
+    val images: ArrayList<String> = ArrayList()
+) : Parcelable {
     @Ignore
     var isSelected = false
 
-    constructor(parcel: Parcel): this() {
+    constructor(parcel: Parcel) : this() {
         this.createdTimestamp = parcel.readLong()
         this.modifiedTimestamp = parcel.readLong()
-        this.title = parcel.readString()
-        this.text = parcel.readString()
+        this.title = parcel.readString() ?: ""
+        this.text = parcel.readString() ?: ""
 
-        val imagesJson = JSONArray(parcel.readString())
-        for (i in 0 until imagesJson.length()) {
-            images.add(imagesJson[i].toString())
+        val parcelImages = parcel.readArrayList(null) as ArrayList<String>
+        for (item in parcelImages) {
+            if (item.isNotEmpty())  // images가 비어있을 때 parcelImages에는 빈 문자열이 들어가서 빈 문자열인지 검사함
+                this.images.add(item)
         }
     }
 
@@ -37,12 +41,7 @@ data class Note(
         parcel.writeLong(modifiedTimestamp)
         parcel.writeString(title)
         parcel.writeString(text)
-
-        val imagesJson = JSONArray()
-        for (item in images) {
-            imagesJson.put(item)
-        }
-        parcel.writeString(imagesJson.toString())
+        parcel.writeList(images)
     }
 
     override fun describeContents(): Int = 0

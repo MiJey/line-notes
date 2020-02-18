@@ -1,26 +1,31 @@
 package dev.mijey.linenotes.detail
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import dev.mijey.linenotes.FileIOHelper
 import dev.mijey.linenotes.Note
 import dev.mijey.linenotes.R
 import kotlinx.android.synthetic.main.activity_note_detail.*
 import kotlinx.android.synthetic.main.dialog_add_image.view.*
 import java.text.SimpleDateFormat
 
-
 class NoteDetailActivity : AppCompatActivity() {
 
     companion object {
         const val EDIT_NOTE_REQUEST_CODE = 1234
         const val EDIT_NOTE_RESULT_CODE = 4321
+
+        const val GALLERY_REQUEST_CODE = 2222
     }
 
     private var note: Note? = null
@@ -44,6 +49,8 @@ class NoteDetailActivity : AppCompatActivity() {
             // TODO 이미지 불러오기
         }
 
+        detail_image_list.adapter = ImageListAdapter(this, note.images)
+
         detail_text.requestFocus()
 
         detail_tool_bar_add_image.setOnClickListener {
@@ -60,7 +67,12 @@ class NoteDetailActivity : AppCompatActivity() {
 
             // 갤러리
             dialogView.add_image_from_gallery.setOnClickListener {
+                val galleryIntent = Intent()
+                galleryIntent.type = "image/*"
+                galleryIntent.action = Intent.ACTION_GET_CONTENT
+                startActivityForResult(Intent.createChooser(galleryIntent, ""), GALLERY_REQUEST_CODE)
 
+                dialog.dismiss()
             }
 
             // 외부 링크
@@ -98,7 +110,8 @@ class NoteDetailActivity : AppCompatActivity() {
                 .setPositiveButton(resources.getString(R.string.save)) { dialogInterface, i ->
                     val note = note ?: Note()
                     note.modifiedTimestamp = System.currentTimeMillis()
-                    note.createdTimestamp = if (note.createdTimestamp == 0L) note.modifiedTimestamp else note.createdTimestamp
+                    note.createdTimestamp =
+                        if (note.createdTimestamp == 0L) note.modifiedTimestamp else note.createdTimestamp
                     note.title = detail_title.text.toString()
                     note.text = detail_text.text.toString()
 
@@ -117,6 +130,37 @@ class NoteDetailActivity : AppCompatActivity() {
                 .show()
         } else {
             super.onBackPressed()
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        // 갤러리에서 이미지 가져오기 결과
+        if (requestCode == GALLERY_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            val uri: Uri = data?.data ?: return
+            val imageFileName = FileIOHelper.getFileNameFromUri(this, uri) ?: return
+            val dstPath = "${filesDir.path}/${note?.createdTimestamp ?: return}"
+            Log.d("yejiuri", "onActivityResult\n" +
+                    "data: $data\n" +
+                    "uri: $uri\n" +
+                    "dstPath: $dstPath\n" +
+                    "imageFileName: $imageFileName")
+
+            Thread {
+                Log.d("yejiuri", "이미지 복사 시작: ${System.currentTimeMillis()}")
+                val result = FileIOHelper.copyFile(this, uri, dstPath, imageFileName)
+                Log.d("yejiuri", "이미지 복사 끝: ${System.currentTimeMillis()}, result: $result")
+
+                if (result) {
+                    // TODO 이미지 복사 완료
+                    runOnUiThread {
+                        val images = note?.images ?: return@runOnUiThread
+                        images.add(imageFileName)
+                        detail_image_list.adapter?.notifyItemChanged(images.size - 1)
+                    }
+                }
+            }.start()
         }
     }
 
@@ -145,8 +189,10 @@ class NoteDetailActivity : AppCompatActivity() {
             detail_title.isEnabled = false
             detail_text.isEnabled = false
 
-            val lastModifiedDate = SimpleDateFormat("yyyy년 MM월 dd일 HH:mm:ss").format(note?.modifiedTimestamp) // DateFormat.getDateInstance(DateFormat.LONG).format(Date(note.modifiedTimestamp))
-            detail_last_modified_date.text = "${resources.getString(R.string.last_modify)}: $lastModifiedDate"
+            val lastModifiedDate =
+                SimpleDateFormat("yyyy년 MM월 dd일 HH:mm:ss").format(note?.modifiedTimestamp) // DateFormat.getDateInstance(DateFormat.LONG).format(Date(note.modifiedTimestamp))
+            detail_last_modified_date.text =
+                "${resources.getString(R.string.last_modify)}: $lastModifiedDate"
             detail_last_modified_date.visibility = View.VISIBLE
         }
     }

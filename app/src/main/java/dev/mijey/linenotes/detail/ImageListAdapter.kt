@@ -22,6 +22,7 @@ class ImageListAdapter(private val noteDetailActivity: NoteDetailActivity, priva
     inner class Item(var noteDetailActivity: NoteDetailActivity, itemView: View) :
         RecyclerView.ViewHolder(itemView) {
         fun bindData(image: String, pos: Int) {
+            itemView.image_list_item_path.text = image
 
             if (noteDetailActivity.isEditMode) {
                 itemView.image_list_item_delete.visibility = View.VISIBLE
