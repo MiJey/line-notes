@@ -3,6 +3,8 @@ package dev.mijey.linenotes.detail
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -20,7 +22,9 @@ import dev.mijey.linenotes.R
 import kotlinx.android.synthetic.main.activity_note_detail.*
 import kotlinx.android.synthetic.main.dialog_add_image.view.*
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
+import java.net.HttpURLConnection
 import java.text.SimpleDateFormat
 
 class NoteDetailActivity : AppCompatActivity() {
@@ -37,7 +41,7 @@ class NoteDetailActivity : AppCompatActivity() {
     private val directoryName: String
         get() = if (note?.createdTimestamp == null || note?.createdTimestamp == 0L) "temp"
         else note!!.createdTimestamp.toString()
-    private var tempFileName = ""
+    var tempImageNameFromCamera = ""  // 가장 최근에 카메라로 불러온 이미지 파일명(확장자 포함) 임시저장
     var isEditMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,7 +87,7 @@ class NoteDetailActivity : AppCompatActivity() {
                                 }
 
                                 val tempFile = File.createTempFile("JPEG_", ".jpg", noteDirectory)
-                                tempFileName = tempFile.name
+                                tempImageNameFromCamera = tempFile.name
                                 tempFile
                             } catch (ex: IOException) {
                                 Log.d("yejicamera", "사진 파일 생성 실패: $ex")
@@ -123,7 +127,10 @@ class NoteDetailActivity : AppCompatActivity() {
 
             // 외부 링크
             dialogView.add_image_from_link.setOnClickListener {
-
+                val dirPath = "${filesDir.path}/$directoryName"
+                val imageName = System.currentTimeMillis().toString()
+                val urlString = dialogView.add_image_url.text.toString()
+                writePNGFileFromURL(dirPath, imageName, urlString)
             }
 
             dialog.show()
@@ -189,7 +196,7 @@ class NoteDetailActivity : AppCompatActivity() {
             CAMERA_REQUEST_CODE -> {
                 if (resultCode == RESULT_OK) {
                     val images = note?.images ?: return
-                    images.add(tempFileName)
+                    images.add(tempImageNameFromCamera)
                     detail_image_list.adapter?.notifyItemChanged(images.size - 1)
                 } else {
                     // TODO 카메라로 이미지 가져오기 실패
@@ -269,5 +276,48 @@ class NoteDetailActivity : AppCompatActivity() {
         }
 
         detail_image_list.adapter?.notifyDataSetChanged()
+    }
+
+    /*********************************************************************************************/
+
+    // URL로 이미지 불러와서 PNG로 저장하기 TODO 비동기
+    private fun writePNGFileFromURL(path: String, filename: String, url: String) {
+        // 폴더 생성
+        val myFile = File(path)
+        if (!myFile.exists()) {
+            File(path).mkdirs()
+            if (!myFile.createNewFile()) {
+                Log.d("yejiurl", "URL로 이미지 불러오기 폴더 생성 실패")
+                return
+            }
+        }
+
+        val thread = Thread(Runnable {
+            try {
+                val connection = java.net.URL(url).openConnection() as HttpURLConnection
+                connection.doInput = true
+                connection.connectTimeout = 5000
+                connection.readTimeout = 5000
+                connection.connect()
+
+                val inputStream = connection.inputStream
+                val outputStream = FileOutputStream("$path/$filename.png")
+                BitmapFactory.decodeStream(inputStream).compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+                Log.d("yejiurl", "URL로 이미지 불러오기 성공!: $filename")
+
+                val images = note?.images ?: return@Runnable
+                images.add("$filename.png")
+                detail_image_list.adapter?.notifyItemChanged(images.size - 1)
+            } catch (e: Exception) {
+                Log.d("yejiurl", "URL로 이미지 불러오기 실패 22222: $e")
+            }
+        })
+
+        try {
+            thread.start()
+            thread.join()
+        } catch (e: Exception) {
+            Log.d("yejiurl", "URL로 이미지 불러오기 실패 11111")
+        }
     }
 }

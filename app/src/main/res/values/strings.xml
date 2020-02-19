@@ -21,4 +21,5 @@
     <string name="camera">카메라</string>
     <string name="gallery">갤러리</string>
     <string name="link">외부 링크</string>
+    <string name="link_hint">가져올 이미지의 URL을 입력하세요.</string>
 </resources>

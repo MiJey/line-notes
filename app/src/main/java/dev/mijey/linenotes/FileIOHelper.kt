@@ -2,10 +2,16 @@ package dev.mijey.linenotes
 
 import android.content.ContentResolver
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.OpenableColumns
+import android.util.Log
+import dev.mijey.linenotes.detail.NoteDetailActivity
 import java.io.File
 import java.io.FileOutputStream
+import java.net.HttpURLConnection
+
 
 object FileIOHelper {
     // 갤러리에서 불러온 이미지 파일 이름 추출하기
