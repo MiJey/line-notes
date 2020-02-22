@@ -70,13 +70,13 @@
                 android:layout_height="1dp"
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp"
-                android:background="@color/gray_lv3"/>
+                android:background="@color/gray_lv3" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/detail_image_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="#990"
+                android:background="#900"
                 android:orientation="horizontal"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
@@ -84,8 +84,10 @@
                 android:id="@+id/detail_image_thumbnail_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="#900"
+                android:background="#990"
                 android:orientation="horizontal"
+                android:scrollbarThumbVertical="@color/white"
+                android:scrollbars="horizontal"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
             <EditText
@@ -93,10 +95,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="16dp"
-                android:textColor="@color/gray_lv7"
-                android:textSize="18sp"
                 android:background="@android:color/transparent"
-                android:hint="@string/enter_text" />
+                android:hint="@string/enter_text"
+                android:textColor="@color/gray_lv7"
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/detail_last_modified_date"

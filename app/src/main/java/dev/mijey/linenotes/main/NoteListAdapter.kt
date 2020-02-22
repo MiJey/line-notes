@@ -4,7 +4,6 @@ import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import dev.mijey.linenotes.Note
 import dev.mijey.linenotes.R
@@ -32,7 +31,18 @@ class NoteListAdapter(private val mainActivity: MainActivity) :
         fun bindData(note: Note, pos: Int) {
             itemView.note_list_item_title.text = "$pos ${note.title}"
             itemView.note_list_item_text_preview.text = note.text
-            itemView.note_list_item_thumbnail
+
+            if (note.imageList.isEmpty()) {
+                itemView.note_list_item_thumbnail.visibility = View.GONE
+            } else {
+                itemView.note_list_item_thumbnail.setImageBitmap(
+                    note.imageList[0].getThumbnail(
+                        mainActivity,
+                        90f
+                    )
+                )
+                itemView.note_list_item_thumbnail.visibility = View.VISIBLE
+            }
 
             // TODO 오늘 변경사항은 날짜 말고 시간으로 보여주기
             val createdDate =
@@ -48,10 +58,12 @@ class NoteListAdapter(private val mainActivity: MainActivity) :
                 itemView.note_list_item_check.visibility = View.VISIBLE
 
                 if (note.isSelected) {
-                    itemView.note_list_item_check.background = mainActivity.resources.getDrawable(R.drawable.bg_oval_color_accent, null)
+                    itemView.note_list_item_check.background =
+                        mainActivity.resources.getDrawable(R.drawable.bg_oval_color_accent, null)
                     itemView.note_list_item_check.setImageResource(R.drawable.ic_check_gray_lv1_24dp)
                 } else {
-                    itemView.note_list_item_check.background = mainActivity.resources.getDrawable(R.drawable.bg_oval_stroke, null)
+                    itemView.note_list_item_check.background =
+                        mainActivity.resources.getDrawable(R.drawable.bg_oval_stroke, null)
                     itemView.note_list_item_check.setImageResource(0)
                 }
 
@@ -67,7 +79,10 @@ class NoteListAdapter(private val mainActivity: MainActivity) :
                 itemView.setOnClickListener {
                     val detailIntent = Intent(mainActivity, NoteDetailActivity::class.java)
                     detailIntent.putExtra("note", note)
-                    mainActivity.startActivityForResult(detailIntent, NoteDetailActivity.EDIT_NOTE_REQUEST_CODE)
+                    mainActivity.startActivityForResult(
+                        detailIntent,
+                        NoteDetailActivity.EDIT_NOTE_REQUEST_CODE
+                    )
                 }
             }
         }

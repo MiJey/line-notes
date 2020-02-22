@@ -1,6 +1,5 @@
 package dev.mijey.linenotes.detail
 
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -12,12 +11,12 @@ import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
-import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import dev.mijey.linenotes.FileIOHelper
 import dev.mijey.linenotes.Note
+import dev.mijey.linenotes.NoteImage
 import dev.mijey.linenotes.R
 import kotlinx.android.synthetic.main.activity_note_detail.*
 import kotlinx.android.synthetic.main.dialog_add_image.view.*
@@ -41,7 +40,7 @@ class NoteDetailActivity : AppCompatActivity() {
     private val directoryName: String
         get() = if (note?.createdTimestamp == null || note?.createdTimestamp == 0L) "temp"
         else note!!.createdTimestamp.toString()
-    var tempImageNameFromCamera = ""  // 가장 최근에 카메라로 불러온 이미지 파일명(확장자 포함) 임시저장
+    private var tempImageNameFromCamera = ""  // 가장 최근에 카메라로 불러온 이미지 파일명(확장자 포함) 임시저장
     var isEditMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,6 +48,7 @@ class NoteDetailActivity : AppCompatActivity() {
         setContentView(R.layout.activity_note_detail)
 
         note = intent.getParcelableExtra("note") ?: Note()
+
         val note = note ?: return
 
         if (note.createdTimestamp == 0L) {
@@ -58,12 +58,9 @@ class NoteDetailActivity : AppCompatActivity() {
             // 기존 노트 불러오기
             detail_title.setText(note.title)
             detail_text.setText(note.text)
-
-            // TODO 이미지 불러오기
         }
 
-        detail_image_list.adapter = ImageListAdapter(this, note.images)
-//        detail_text.requestFocus()
+        detail_image_thumbnail_list.adapter = ImageThumbnailListAdapter(this, note)
 
         // 이미지 추가하기
         detail_tool_bar_add_image.setOnClickListener {
@@ -212,9 +209,9 @@ class NoteDetailActivity : AppCompatActivity() {
         when (requestCode) {
             CAMERA_REQUEST_CODE -> {
                 if (resultCode == RESULT_OK) {
-                    val images = note?.images ?: return
-                    images.add(tempImageNameFromCamera)
-                    detail_image_list.adapter?.notifyItemChanged(images.size - 1)
+                    val note = note ?: return
+                    note.imageList.add(NoteImage(note, tempImageNameFromCamera))
+                    detail_image_thumbnail_list.adapter?.notifyItemChanged(note.imageList.size - 1)
                 } else {
                     // TODO 카메라로 이미지 가져오기 실패
                     Log.d("yejicamera", "카메라로 이미지 가져오기 실패")
@@ -243,9 +240,9 @@ class NoteDetailActivity : AppCompatActivity() {
                         if (result) {
                             // 이미지 복사 완료
                             runOnUiThread {
-                                val images = note?.images ?: return@runOnUiThread
-                                images.add(imageFileName)
-                                detail_image_list.adapter?.notifyItemChanged(images.size - 1)
+                                val note = note ?: return@runOnUiThread
+                                note.imageList.add(NoteImage(note, imageFileName))
+                                detail_image_thumbnail_list.adapter?.notifyItemChanged(note.imageList.size - 1)
                             }
                         } else {
                             // TODO 이미지 복사 실패
@@ -285,7 +282,7 @@ class NoteDetailActivity : AppCompatActivity() {
             detail_last_modified_date.visibility = View.VISIBLE
         }
 
-        detail_image_list.adapter?.notifyDataSetChanged()
+        detail_image_thumbnail_list.adapter?.notifyDataSetChanged()
     }
 
     /*********************************************************************************************/
@@ -315,9 +312,9 @@ class NoteDetailActivity : AppCompatActivity() {
                 BitmapFactory.decodeStream(inputStream).compress(Bitmap.CompressFormat.PNG, 100, outputStream)
                 Log.d("yejiurl", "URL로 이미지 불러오기 성공!: $filename")
 
-                val images = note?.images ?: return@Runnable
-                images.add("$filename.png")
-                detail_image_list.adapter?.notifyItemChanged(images.size - 1)
+                val note = note ?: return@Runnable
+                note.imageList.add(NoteImage(note, "$filename.png"))
+                detail_image_thumbnail_list.adapter?.notifyItemChanged(note.imageList.size - 1)
             } catch (e: Exception) {
                 Log.d("yejiurl", "URL로 이미지 불러오기 실패 22222: $e")
             }

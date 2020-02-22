@@ -14,14 +14,12 @@ data class Note(
     var modifiedTimestamp: Long = 0L,
     var title: String = "",
     var text: String = "",
-
-    // 내부저장소에 폴더명이 createdTimestamp인 폴더 안에 이미지들을 저장해둠
-    // ex) "${context.filesDir}/$createdTimestamp/${images[i]}"
-    // ex) /data/user/0/dev.mijey.linenotes/files/1581791454985/20200218_090227.png
-    val images: ArrayList<String> = ArrayList()
+    val images: ArrayList<String> = ArrayList() // TODO imageNameList로 이름 바꾸기
 ) : Parcelable {
     @Ignore
     var isSelected = false
+    @Ignore
+    val imageList: ArrayList<NoteImage> = ArrayList()
 
     constructor(parcel: Parcel) : this() {
         this.createdTimestamp = parcel.readLong()
@@ -29,10 +27,24 @@ data class Note(
         this.title = parcel.readString() ?: ""
         this.text = parcel.readString() ?: ""
 
-        val parcelImages = parcel.readArrayList(null) as ArrayList<String>
-        for (item in parcelImages) {
-            if (item.isNotEmpty())  // images가 비어있을 때 parcelImages에는 빈 문자열이 들어가서 빈 문자열인지 검사함
-                this.images.add(item)
+        images.clear()
+        imageList.clear()
+        val parcelList = parcel.readArrayList(null) as ArrayList<String>
+        for (imageName in parcelList) {
+            // images가 비어있을 때 parcelImages에 빈 문자열이 들어가서 빈 문자열인지 검사함
+            if (imageName.isNotEmpty()){
+                images.add(imageName)
+                imageList.add(NoteImage(this, imageName))
+            }
+        }
+    }
+
+    init {
+        imageList.clear()
+        for (imageName in images) {
+            if (imageName.isNotEmpty()){
+                imageList.add(NoteImage(this, imageName))
+            }
         }
     }
 
