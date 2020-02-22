@@ -2,6 +2,7 @@ package dev.mijey.linenotes.main
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
@@ -38,9 +39,28 @@ class MainActivity : AppCompatActivity() {
 
     private var noteDB: NoteDatabase? = null
     private var noteList: LiveData<List<Note>>? = null
-    var isEditMode = false
     private var mNoteViewModel: NoteViewModel? = null
     private var mNoteListAdapter: NoteListAdapter? = null
+
+    var isEditMode = false
+    set(value) {
+        field = value
+
+        if (isEditMode) {
+            main_tool_bar_action_button.text = resources.getString(R.string.delete)
+        } else {
+            // 선택한 노트 삭제
+//                val iter = noteList.iterator()
+//                while (iter.hasNext()) {
+//                    if (iter.next().isSelected)
+//                        iter.remove()
+//                }
+
+            main_tool_bar_action_button.text = resources.getString(R.string.edit)
+        }
+
+        note_list.adapter?.notifyDataSetChanged()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,21 +87,6 @@ class MainActivity : AppCompatActivity() {
         // 편집, 삭제
         main_tool_bar_action_button.setOnClickListener {
             isEditMode = !isEditMode
-
-            if (isEditMode) {
-                main_tool_bar_action_button.text = resources.getString(R.string.delete)
-            } else {
-                // 선택한 노트 삭제
-//                val iter = noteList.iterator()
-//                while (iter.hasNext()) {
-//                    if (iter.next().isSelected)
-//                        iter.remove()
-//                }
-
-                main_tool_bar_action_button.text = resources.getString(R.string.edit)
-            }
-
-            note_list.adapter?.notifyDataSetChanged()
         }
 
         // 새 노트
@@ -98,12 +103,22 @@ class MainActivity : AppCompatActivity() {
         note_list.adapter?.notifyDataSetChanged()
     }
 
+    override fun onBackPressed() {
+        if (isEditMode) {
+            isEditMode = !isEditMode
+        } else {
+            super.onBackPressed()
+        }
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        Log.d("yejimain", "onActivityResult. requestCode: $requestCode, resultCode: $resultCode, data: $data")
 
         // 변경된 노트 저장
         if (requestCode == NoteDetailActivity.EDIT_NOTE_REQUEST_CODE && resultCode == NoteDetailActivity.EDIT_NOTE_RESULT_CODE) {
             val note = data?.getParcelableExtra<Note>("note") ?: return
+            Log.d("yejimain", "변경된 노트 저장 note: $note")
             mNoteViewModel?.insert(note)
         }
     }

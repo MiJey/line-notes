@@ -14,6 +14,8 @@ import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
+import androidx.recyclerview.widget.LinearSnapHelper
+import androidx.recyclerview.widget.RecyclerView
 import dev.mijey.linenotes.FileIOHelper
 import dev.mijey.linenotes.Note
 import dev.mijey.linenotes.NoteImage
@@ -41,6 +43,8 @@ class NoteDetailActivity : AppCompatActivity() {
         get() = if (note?.createdTimestamp == null || note?.createdTimestamp == 0L) "temp"
         else note!!.createdTimestamp.toString()
     private var tempImageNameFromCamera = ""  // 가장 최근에 카메라로 불러온 이미지 파일명(확장자 포함) 임시저장
+
+    var currentPosition = 0
     var isEditMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,9 +62,64 @@ class NoteDetailActivity : AppCompatActivity() {
             // 기존 노트 불러오기
             detail_title.setText(note.title)
             detail_text.setText(note.text)
+
+            if (note.imageList.isNotEmpty())
+                note.imageList[0].isSelected = true
         }
 
+        detail_image_list.hasFixedSize()
+        //detail_image_thumbnail_list.hasFixedSize()
+
+        detail_image_list.adapter = ImageListAdapter(this, note)
         detail_image_thumbnail_list.adapter = ImageThumbnailListAdapter(this, note)
+
+        // 썸네일 하나의 크기가 64dp 이므로 (화면 넓이 - 64dp) / 2를 padding으로 주면 맨 앞, 맨 뒤 셀도 가운데 정렬이 됨
+//        val dp64 = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 64f, resources.displayMetrics).toInt()
+//        val padding = (Resources.getSystem().displayMetrics.widthPixels - dp64) / 2
+//        detail_image_thumbnail_list.setPadding(padding, 0, padding, 0)
+
+        val imageSnapHelper = LinearSnapHelper()
+        imageSnapHelper.attachToRecyclerView(detail_image_list)
+
+        val thumbnailSnapHelper = LinearSnapHelper()
+        thumbnailSnapHelper.attachToRecyclerView(detail_image_thumbnail_list)
+
+        detail_image_list.addOnScrollListener(object  : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+                Log.d("yejiscroll", "이미지 리스트 onScrollStateChanged newState: $newState")
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    Log.d("yejiscroll", "이미지 리스트 SCROLL_STATE_IDLE")
+                    val view =  imageSnapHelper.findSnapView(detail_image_list.layoutManager) ?: return
+                    val newPosition = recyclerView.getChildAdapterPosition(view)
+                    if (currentPosition == newPosition) return
+
+                    val beforePosition = currentPosition
+                    currentPosition = newPosition
+
+                    note.imageList[beforePosition].isSelected = false
+                    note.imageList[currentPosition].isSelected = true
+                    detail_image_thumbnail_list.adapter?.notifyItemChanged(beforePosition)
+                    detail_image_thumbnail_list.adapter?.notifyItemChanged(currentPosition)
+
+                    detail_image_thumbnail_list.smoothScrollToPosition(currentPosition)
+                    Log.d("yejiscroll", "이미지 리스트 currentPostion: $currentPosition")
+                }
+            }
+        })
+
+//        detail_image_thumbnail_list.addOnScrollListener(object  : RecyclerView.OnScrollListener() {
+//            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+//                super.onScrollStateChanged(recyclerView, newState)
+//                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+//                    Log.d("yejiscroll", "썸네일 리스트 SCROLL_STATE_IDLE")
+//                    val view =  thumbnailSnapHelper.findSnapView(detail_image_thumbnail_list.layoutManager) ?: return
+//                    val currentPosition = recyclerView.getChildAdapterPosition(view)
+//                    detail_image_list.scrollToPosition(currentPosition)
+//                    Log.d("yejiscroll", "썸네일 리스트 currentPostion: $currentPosition")
+//                }
+//            }
+//        })
 
         // 이미지 추가하기
         detail_tool_bar_add_image.setOnClickListener {
@@ -175,12 +234,16 @@ class NoteDetailActivity : AppCompatActivity() {
             AlertDialog.Builder(this)
                 .setMessage(resources.getString(R.string.save_confirm))
                 .setPositiveButton(resources.getString(R.string.save)) { dialogInterface, i ->
+                    Log.d("yejidetail", "변경사항 저장 note: $note")
                     val note = note ?: Note()
                     note.modifiedTimestamp = System.currentTimeMillis()
                     note.createdTimestamp =
                         if (note.createdTimestamp == 0L) note.modifiedTimestamp else note.createdTimestamp
                     note.title = detail_title.text.toString()
                     note.text = detail_text.text.toString()
+
+                    for (image in note.imageList)
+                        note.imageNameList.add(image.name)
 
                     val returnIntent = Intent()
                     returnIntent.putExtra("note", note)
@@ -243,6 +306,7 @@ class NoteDetailActivity : AppCompatActivity() {
                                 val note = note ?: return@runOnUiThread
                                 note.imageList.add(NoteImage(note, imageFileName))
                                 detail_image_thumbnail_list.adapter?.notifyItemChanged(note.imageList.size - 1)
+                                Log.d("yejigallery", "이미지 복사 완료: ${System.currentTimeMillis()}, note: $note")
                             }
                         } else {
                             // TODO 이미지 복사 실패

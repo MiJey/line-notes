@@ -35,12 +35,7 @@ class NoteListAdapter(private val mainActivity: MainActivity) :
             if (note.imageList.isEmpty()) {
                 itemView.note_list_item_thumbnail.visibility = View.GONE
             } else {
-                itemView.note_list_item_thumbnail.setImageBitmap(
-                    note.imageList[0].getThumbnail(
-                        mainActivity,
-                        90f
-                    )
-                )
+                itemView.note_list_item_thumbnail.setImageBitmap(note.imageList[0].getThumbnail(mainActivity))
                 itemView.note_list_item_thumbnail.visibility = View.VISIBLE
             }
 

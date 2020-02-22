@@ -2,6 +2,7 @@ package dev.mijey.linenotes
 
 import android.os.Parcel
 import android.os.Parcelable
+import android.util.Log
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
@@ -14,7 +15,7 @@ data class Note(
     var modifiedTimestamp: Long = 0L,
     var title: String = "",
     var text: String = "",
-    val images: ArrayList<String> = ArrayList() // TODO imageNameList로 이름 바꾸기
+    val imageNameList: ArrayList<String> = ArrayList()
 ) : Parcelable {
     @Ignore
     var isSelected = false
@@ -27,13 +28,14 @@ data class Note(
         this.title = parcel.readString() ?: ""
         this.text = parcel.readString() ?: ""
 
-        images.clear()
+        imageNameList.clear()
         imageList.clear()
         val parcelList = parcel.readArrayList(null) as ArrayList<String>
         for (imageName in parcelList) {
             // images가 비어있을 때 parcelImages에 빈 문자열이 들어가서 빈 문자열인지 검사함
             if (imageName.isNotEmpty()){
-                images.add(imageName)
+                Log.d("yejinote", "11111 createdTimestamp: $createdTimestamp, imageName: $imageName")
+                imageNameList.add(imageName)
                 imageList.add(NoteImage(this, imageName))
             }
         }
@@ -41,8 +43,9 @@ data class Note(
 
     init {
         imageList.clear()
-        for (imageName in images) {
+        for (imageName in imageNameList) {
             if (imageName.isNotEmpty()){
+                Log.d("yejinote", "22222 createdTimestamp: $createdTimestamp, imageName: $imageName")
                 imageList.add(NoteImage(this, imageName))
             }
         }
@@ -53,7 +56,7 @@ data class Note(
         parcel.writeLong(modifiedTimestamp)
         parcel.writeString(title)
         parcel.writeString(text)
-        parcel.writeList(images)
+        parcel.writeList(imageNameList)
     }
 
     override fun describeContents(): Int = 0
