@@ -48,19 +48,11 @@ class NoteListAdapter(private val mainActivity: MainActivity) :
                 itemView.note_list_item_check.visibility = View.VISIBLE
 
                 if (note.isSelected) {
-                    itemView.note_list_item_check.setBackgroundColor(
-                        ContextCompat.getColor(
-                            mainActivity,
-                            R.color.colorAccent
-                        )
-                    )
+                    itemView.note_list_item_check.background = mainActivity.resources.getDrawable(R.drawable.bg_oval_color_accent, null)
+                    itemView.note_list_item_check.setImageResource(R.drawable.ic_check_gray_lv1_24dp)
                 } else {
-                    itemView.note_list_item_check.setBackgroundColor(
-                        ContextCompat.getColor(
-                            mainActivity,
-                            R.color.colorPrimaryDark
-                        )
-                    )
+                    itemView.note_list_item_check.background = mainActivity.resources.getDrawable(R.drawable.bg_oval_stroke, null)
+                    itemView.note_list_item_check.setImageResource(0)
                 }
 
                 itemView.note_list_item.setOnClickListener {

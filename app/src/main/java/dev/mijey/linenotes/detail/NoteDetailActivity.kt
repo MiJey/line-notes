@@ -63,7 +63,7 @@ class NoteDetailActivity : AppCompatActivity() {
         }
 
         detail_image_list.adapter = ImageListAdapter(this, note.images)
-        detail_text.requestFocus()
+//        detail_text.requestFocus()
 
         // 이미지 추가하기
         detail_tool_bar_add_image.setOnClickListener {
@@ -144,6 +144,23 @@ class NoteDetailActivity : AppCompatActivity() {
             } else {
                 // 저장하기 위해 액티비티 닫기
                 onBackPressed()
+            }
+        }
+
+        detail_title.setOnClickListener {
+            isEditMode = true
+            setLayout()
+        }
+
+        detail_text.setOnClickListener {
+            isEditMode = true
+            setLayout()
+        }
+
+        // 첫 클릭은 포커스만 가져가서 onClick 리스너는 안불리고 키보드만 올라옴
+        detail_text.setOnFocusChangeListener { view, hasFocus ->
+            if (hasFocus) {
+                view.callOnClick()
             }
         }
     }
@@ -249,24 +266,17 @@ class NoteDetailActivity : AppCompatActivity() {
             if (Build.VERSION.SDK_INT >= 26)
                 detail_tool_bar_action_button.tooltipText = resources.getString(R.string.save)
 
-            detail_title.isEnabled = true
-            detail_text.isEnabled = true
+            detail_title.isCursorVisible = true
+            detail_text.isCursorVisible = true
 
             detail_last_modified_date.visibility = View.GONE
-
-            // 포커스 주고 키보드 자동으로 올리기
-            detail_text.postDelayed({
-                detail_text.requestFocus()
-                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.showSoftInput(detail_text, InputMethodManager.SHOW_IMPLICIT)
-            }, 30)
         } else {
             detail_tool_bar_action_button.setImageResource(R.drawable.ic_edit_white_24dp)
             if (Build.VERSION.SDK_INT >= 26)
                 detail_tool_bar_action_button.tooltipText = resources.getString(R.string.edit)
 
-            detail_title.isEnabled = false
-            detail_text.isEnabled = false
+            detail_title.isCursorVisible = false
+            detail_text.isCursorVisible = false
 
             val lastModifiedDate =
                 SimpleDateFormat("yyyy년 MM월 dd일 HH:mm:ss").format(note?.modifiedTimestamp) // DateFormat.getDateInstance(DateFormat.LONG).format(Date(note.modifiedTimestamp))
