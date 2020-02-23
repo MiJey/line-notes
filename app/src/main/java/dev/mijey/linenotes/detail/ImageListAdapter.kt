@@ -1,7 +1,6 @@
 package dev.mijey.linenotes.detail
 
 import android.os.Looper
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,10 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import dev.mijey.linenotes.Note
 import dev.mijey.linenotes.NoteImage
 import dev.mijey.linenotes.R
-import kotlinx.android.synthetic.main.activity_note_detail.*
 import kotlinx.android.synthetic.main.image_list_item.view.*
-import java.lang.Exception
-import java.util.logging.Handler
 
 
 class ImageListAdapter(

@@ -23,11 +23,7 @@ class NoteImage(val note: Note, val name: String) {
         val dp90 = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 90f, context.resources.displayMetrics).toInt()
 
         thumbnail = try {
-            ThumbnailUtils.extractThumbnail(
-                bitmap,
-                dp90,
-                dp90
-            )
+            ThumbnailUtils.extractThumbnail(bitmap, dp90, dp90)
         } catch (e: Exception) {
             Log.d("yejithumbnail", "썸네일 만들기 실패: $e")
             null
@@ -47,17 +43,9 @@ class NoteImage(val note: Note, val name: String) {
 
         // 높이가 200dp를 넘어가는 이미지는 리사이징
         // resizedWidth : resizedHeight(200dp) = imageWidth : imageHeight
-        val dp200 = TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            200f,
-            context.resources.displayMetrics
-        ).toInt()
+        val dp200 = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 200f, context.resources.displayMetrics).toInt()
         val resizedHeight = if (imageHeight > dp200) dp200 else imageHeight
         val resizedWidth = (resizedHeight * imageWidth) / imageHeight
-        Log.d(
-            "yejiresize",
-            "imageWidth: $imageWidth, imageHeight: $imageHeight, resizedHeight: $resizedHeight, resizedWidth: $resizedWidth"
-        )
 
         bitmapImage = try {
             ThumbnailUtils.extractThumbnail(
@@ -112,7 +100,7 @@ class NoteImage(val note: Note, val name: String) {
                 // 회전에 실패하는 경우 원본 반환
             }
         }
-        
+
         return bitmap
     }
 }

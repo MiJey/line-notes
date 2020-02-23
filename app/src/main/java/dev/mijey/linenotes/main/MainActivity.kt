@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
@@ -35,6 +34,13 @@ import kotlinx.android.synthetic.main.activity_main.*
  *     - 카메라로 새로 촬영한 이미지
  *     - 외부 이미지 주소(URL)
  *   3. 편집 시에는 기존에 첨부된 이미지가 나타나며, 이미지를 더 추가하거나 기존 이미지를 삭제할 수 있습니다.
+ *
+ * TODO 리사이클러뷰 스크롤바 스타일 적용하기
+ * TODO 메모 롱클릭하면 편집모드로 들어가기
+ * TODO 제목이 없으면 제목 부분 gone
+ * TODO 이미지 오른쪽 상단 라운딩
+ * TODO 맨 마지막에 비어있는 항목 하나 넣어서 새 노트 아이콘 공간 만들기
+ * TODO 전체 선택 만들기
  */
 
 class MainActivity : AppCompatActivity() {
@@ -81,7 +87,6 @@ class MainActivity : AppCompatActivity() {
                                 Thread {
                                     // 선택한 노트 삭제
                                     for (note in notes) {
-                                        Log.d("yejimain", "노트 삭제: $note, isSelected: ${note.isSelected}")
                                         if (note.isSelected)
                                             mNoteViewModel?.delete(note)
                                     }
@@ -155,12 +160,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        Log.d("yejimain", "onActivityResult. requestCode: $requestCode, resultCode: $resultCode, data: $data")
 
         // 변경된 노트 저장
         if (requestCode == NoteDetailActivity.EDIT_NOTE_REQUEST_CODE && resultCode == NoteDetailActivity.EDIT_NOTE_RESULT_CODE) {
             val note = data?.getParcelableExtra<Note>("note") ?: return
-            Log.d("yejimain", "변경된 노트 저장 note: $note")
             mNoteViewModel?.insert(note)
         }
     }

@@ -26,7 +26,13 @@ import kotlinx.android.synthetic.main.dialog_add_image.view.*
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
-import java.text.SimpleDateFormat
+
+/**
+ * TODO 제목, 메모 둘 다 비어있으면 저장하지 않기
+ * TODO 이미지 처음 가져올 때 썸네일 강조하기
+ * TODO 이 메모 삭제
+ * TODO 이미지 단독으로 확대해서 보기
+ */
 
 class NoteDetailActivity : AppCompatActivity() {
 
@@ -220,7 +226,6 @@ class NoteDetailActivity : AppCompatActivity() {
             AlertDialog.Builder(this)
                 .setMessage(resources.getString(R.string.save_confirm))
                 .setPositiveButton(resources.getString(R.string.save)) { dialogInterface, i ->
-                    Log.d("yejidetail", "변경사항 저장 note: $editingNote")
                     editingNote?.modifiedTimestamp = System.currentTimeMillis()
 
                     if (editingNote?.createdTimestamp == 0L) {
@@ -262,9 +267,6 @@ class NoteDetailActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        Log.d("yejiresult", "NoteDetailActivity onActivityResult\n" +
-                "requestCode: $requestCode, resultCode: $resultCode\n" +
-                "data: $data")
 
         when (requestCode) {
             CAMERA_REQUEST_CODE -> {
@@ -285,20 +287,9 @@ class NoteDetailActivity : AppCompatActivity() {
                     val uri: Uri = data?.data ?: return
                     val imageFileName = FileIOHelper.getFileNameFromUri(this, uri) ?: return
                     val dstPath = editingNote?.getDirectoryPath(this)
-                    Log.d(
-                        "yejigallery", "onActivityResult\n" +
-                                "data: $data\n" +
-                                "uri: $uri\n" +
-                                "dstPath: $dstPath\n" +
-                                "imageFileName: $imageFileName"
-                    )
 
                     Thread {
-                        Log.d("yejigallery", "이미지 복사 시작: ${System.currentTimeMillis()}")
-                        val result = FileIOHelper.copyFile(this, uri, dstPath, imageFileName)
-                        Log.d("yejigallery", "이미지 복사 끝: ${System.currentTimeMillis()}, result: $result")
-
-                        if (result) {
+                        if (FileIOHelper.copyFile(this, uri, dstPath, imageFileName)) {
                             // 이미지 복사 완료
                             runOnUiThread {
                                 val note = editingNote ?: return@runOnUiThread
@@ -326,8 +317,6 @@ class NoteDetailActivity : AppCompatActivity() {
             position >= imageList.size -> imageList.size - 1
             else -> position
         }
-
-        // if (currentImagePosition == newPosition) return
 
         var beforePosition = currentImagePosition
         currentImagePosition = newPosition
