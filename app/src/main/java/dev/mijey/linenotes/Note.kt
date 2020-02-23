@@ -74,6 +74,32 @@ data class Note(
         return "${context.filesDir.path}/$createdTimestamp"
     }
 
+    // 리스트에 없는 이미지는 파일 삭제, 파일에 없는 이미지는 리스트에서 삭제
+    fun syncImageFileList(context: Context) {
+        // imageList -> imageNameList 동기화
+        imageNameList.clear()
+        for (image in imageList)
+            imageNameList.add(image.name)
+
+        // imageNameList <-> 파일 동기화
+        val directoryPath = getDirectoryPath(context)
+        val imageFileNameList = getDirectory(context)?.list()
+
+        if (imageFileNameList != null && imageFileNameList.isNotEmpty()) {
+            // 파일은 있는데 리스트에 없으면 파일 삭제
+            for (imageFileName in imageFileNameList) {
+                if (!imageNameList.contains(imageFileName))
+                    File("$directoryPath/$imageFileName").delete()
+            }
+
+            // 리스트엔 있는데 파일이 없으면 리스트 삭제
+            for (imageName in imageNameList) {
+                if (!imageFileNameList.contains(imageName))
+                    File("$directoryPath/$imageName").delete()
+            }
+        }
+    }
+
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeLong(createdTimestamp)
         parcel.writeLong(modifiedTimestamp)

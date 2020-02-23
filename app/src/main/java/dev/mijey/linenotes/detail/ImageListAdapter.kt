@@ -1,6 +1,7 @@
 package dev.mijey.linenotes.detail
 
 import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,7 +9,9 @@ import androidx.recyclerview.widget.RecyclerView
 import dev.mijey.linenotes.Note
 import dev.mijey.linenotes.NoteImage
 import dev.mijey.linenotes.R
+import kotlinx.android.synthetic.main.activity_note_detail.*
 import kotlinx.android.synthetic.main.image_list_item.view.*
+import java.lang.Exception
 import java.util.logging.Handler
 
 
@@ -41,13 +44,13 @@ class ImageListAdapter(
             }.start()
 
             if (noteDetailActivity.isEditMode) {
-                itemView.image_list_item_selected.visibility = View.VISIBLE
+                itemView.image_list_item_delete.visibility = View.VISIBLE
 
-                itemView.image_list_item_selected.setOnClickListener {
-                    // TODO 해당 이미지 삭제
+                itemView.image_list_item_delete.setOnClickListener {
+                    noteDetailActivity.imageRemoveAt(pos)
                 }
             } else {
-                itemView.image_list_item_selected.visibility = View.GONE
+                itemView.image_list_item_delete.visibility = View.GONE
             }
         }
     }

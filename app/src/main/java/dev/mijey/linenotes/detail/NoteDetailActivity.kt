@@ -44,6 +44,7 @@ class NoteDetailActivity : AppCompatActivity() {
     private var note: Note? = null
     //private var tempImageNameFromCamera = ""  // 가장 최근에 카메라로 불러온 이미지 파일명(확장자 포함) 임시저장
     private var tempImageFileFromCamera: File? = null
+    private var isLocked = false    // 연속 이미지 삭제 방지, 뒤로가기때 저장 꼬이는 것 방지용
 
     var currentImagePosition = 0
     var isEditMode = false
@@ -204,6 +205,10 @@ class NoteDetailActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
+        // 저장 꼬이는 것 방지
+        if (isLocked) return
+        isLocked = true
+
         val isChanged = true
         // TODO 디비랑 비교해서 바뀐게 있는지 확인
 
@@ -225,8 +230,8 @@ class NoteDetailActivity : AppCompatActivity() {
                     note.title = detail_title.text.toString()
                     note.text = detail_text.text.toString()
 
-                    for (image in note.imageList)
-                        note.imageNameList.add(image.name)
+                    // 이미지 수정 사항 반영
+                    note.syncImageFileList(this)
 
                     val returnIntent = Intent()
                     returnIntent.putExtra("note", note)
@@ -238,6 +243,10 @@ class NoteDetailActivity : AppCompatActivity() {
                     super.onBackPressed()
                 }
                 .setNeutralButton(resources.getString(R.string.cancel)) { dialogInterface, i ->
+                    // 다이얼로그만 닫고 아무것도 안함
+                }
+                .setOnDismissListener {
+                    isLocked = false
                 }
                 .create()
                 .show()
@@ -307,11 +316,19 @@ class NoteDetailActivity : AppCompatActivity() {
 
     fun imageScrollTo(position: Int) {
         val imageList = note?.imageList ?: return
-        if (position < 0 || position >= imageList.size) return
-        if (currentImagePosition == position) return
+        val newPosition = when {
+            position < 0 -> 0
+            position >= imageList.size -> imageList.size - 1
+            else -> position
+        }
 
-        val beforePosition = currentImagePosition
-        currentImagePosition = position
+        // if (currentImagePosition == newPosition) return
+
+        var beforePosition = currentImagePosition
+        currentImagePosition = newPosition
+
+        if (beforePosition >= imageList.size)
+            beforePosition = imageList.size - 1
 
         imageList[beforePosition].isSelected = false
         imageList[currentImagePosition].isSelected = true
@@ -321,6 +338,25 @@ class NoteDetailActivity : AppCompatActivity() {
 
         detail_image_list.scrollToPosition(currentImagePosition)
         detail_image_thumbnail_list.scrollToPosition(currentImagePosition)
+    }
+
+    fun imageRemoveAt(position: Int) {
+        if (isLocked) return
+        isLocked = true
+
+        // 해당 이미지 삭제
+        try {
+            note?.imageList?.removeAt(position)
+            detail_image_list.adapter?.notifyItemRemoved(position)
+            detail_image_thumbnail_list.adapter?.notifyItemRemoved(position)
+            imageScrollTo(position)
+        } catch (e: java.lang.Exception) {
+            Log.d("yejiimage", "이미지 삭제 오류: $e")
+            detail_image_list.adapter?.notifyDataSetChanged()
+            detail_image_thumbnail_list.adapter?.notifyDataSetChanged()
+        }
+
+        isLocked = false
     }
 
     /*********************************************************************************************/
@@ -333,7 +369,6 @@ class NoteDetailActivity : AppCompatActivity() {
 
             detail_title.isCursorVisible = true
             detail_text.isCursorVisible = true
-
             detail_last_modified_date.visibility = View.GONE
         } else {
             detail_tool_bar_action_button.setImageResource(R.drawable.ic_edit_white_24dp)
@@ -350,6 +385,7 @@ class NoteDetailActivity : AppCompatActivity() {
             detail_last_modified_date.visibility = View.VISIBLE
         }
 
+        detail_image_list.adapter?.notifyDataSetChanged()
         detail_image_thumbnail_list.adapter?.notifyDataSetChanged()
     }
 
