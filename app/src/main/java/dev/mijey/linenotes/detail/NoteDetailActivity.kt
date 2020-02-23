@@ -20,10 +20,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.LinearSnapHelper
 import androidx.recyclerview.widget.RecyclerView
-import dev.mijey.linenotes.FileIOHelper
-import dev.mijey.linenotes.Note
-import dev.mijey.linenotes.NoteImage
-import dev.mijey.linenotes.R
+import dev.mijey.linenotes.*
 import kotlinx.android.synthetic.main.activity_note_detail.*
 import kotlinx.android.synthetic.main.dialog_add_image.view.*
 import java.io.File
@@ -41,8 +38,8 @@ class NoteDetailActivity : AppCompatActivity() {
         const val CAMERA_REQUEST_CODE = 3333
     }
 
-    private var note: Note? = null
-    //private var tempImageNameFromCamera = ""  // 가장 최근에 카메라로 불러온 이미지 파일명(확장자 포함) 임시저장
+    private var originNote: Note? = null
+    private var editingNote: Note? = null
     private var tempImageFileFromCamera: File? = null
     private var isLocked = false    // 연속 이미지 삭제 방지, 뒤로가기때 저장 꼬이는 것 방지용
 
@@ -56,24 +53,25 @@ class NoteDetailActivity : AppCompatActivity() {
         // 기존 임시 폴더 삭제
         File(filesDir.path, "0").delete()
 
-        note = intent.getParcelableExtra("note") ?: Note()
-        val note = note ?: return
+        originNote = intent.getParcelableExtra("note")
+        editingNote = originNote?.copy() ?: Note()
+        val editingNote = editingNote ?: return
 
-        if (note.createdTimestamp == 0L) {
+        if (editingNote.createdTimestamp == 0L) {
             // 새 노트
             isEditMode = true
         } else {
             // 기존 노트 불러오기
-            detail_title.setText(note.title)
-            detail_text.setText(note.text)
+            detail_title.setText(editingNote.title)
+            detail_text.setText(editingNote.text)
 
-            if (note.imageList.isNotEmpty())
-                note.imageList[0].isSelected = true
+            if (editingNote.imageList.isNotEmpty())
+                editingNote.imageList[0].isSelected = true
         }
 
         detail_image_list.hasFixedSize()
-        detail_image_list.adapter = ImageListAdapter(this, note)
-        detail_image_thumbnail_list.adapter = ImageThumbnailListAdapter(this, note)
+        detail_image_list.adapter = ImageListAdapter(this, editingNote)
+        detail_image_thumbnail_list.adapter = ImageThumbnailListAdapter(this, editingNote)
 
         val imageSnapHelper = LinearSnapHelper()
         imageSnapHelper.attachToRecyclerView(detail_image_list)
@@ -107,7 +105,7 @@ class NoteDetailActivity : AppCompatActivity() {
                     Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { takePictureIntent ->
                         takePictureIntent.resolveActivity(packageManager)?.also {
                             try {
-                                tempImageFileFromCamera = File.createTempFile("JPEG_", ".jpg", note.getDirectory(this))
+                                tempImageFileFromCamera = File.createTempFile("JPEG_", ".jpg", editingNote.getDirectory(this))
                             } catch (e: Exception) {
                                 Log.d("yejicamera", "사진 파일 생성 실패: $e")
                                 Toast.makeText(this, resources.getString(R.string.fail_image), Toast.LENGTH_SHORT).show()
@@ -156,7 +154,7 @@ class NoteDetailActivity : AppCompatActivity() {
 
                 val imageName = System.currentTimeMillis().toString()
                 val urlString = dialogView.add_image_url.text.toString()
-                writePNGFileFromURL(note.getDirectoryPath(this), imageName, urlString)
+                writePNGFileFromURL(editingNote.getDirectoryPath(this), imageName, urlString)
                 Toast.makeText(this, resources.getString(R.string.load_image), Toast.LENGTH_SHORT).show()
                 dialog.dismiss()
             }
@@ -209,32 +207,26 @@ class NoteDetailActivity : AppCompatActivity() {
         if (isLocked) return
         isLocked = true
 
-        val isChanged = true
-        // TODO 디비랑 비교해서 바뀐게 있는지 확인
+        editingNote?.title = detail_title.text.toString()
+        editingNote?.text = detail_text.text.toString()
 
-        if (isChanged) {
+        if (isChanged()) {
             AlertDialog.Builder(this)
                 .setMessage(resources.getString(R.string.save_confirm))
                 .setPositiveButton(resources.getString(R.string.save)) { dialogInterface, i ->
-                    Log.d("yejidetail", "변경사항 저장 note: $note")
-                    val note = note ?: Note()
-                    val timestamp = System.currentTimeMillis()
+                    Log.d("yejidetail", "변경사항 저장 note: $editingNote")
+                    editingNote?.modifiedTimestamp = System.currentTimeMillis()
 
-                    if (note.createdTimestamp == 0L) {
+                    if (editingNote?.createdTimestamp == 0L) {
                         // 새 노트 저장
-                        note.createdTimestamp = timestamp
-                        note.createDirectoryFromTemp(this)
+                        editingNote?.createdTimestamp = editingNote?.modifiedTimestamp ?: 0L
+                        editingNote?.createDirectoryFromTemp(this)
                     }
 
-                    note.modifiedTimestamp = timestamp
-                    note.title = detail_title.text.toString()
-                    note.text = detail_text.text.toString()
-
-                    // 이미지 수정 사항 반영
-                    note.syncImageFileList(this)
+                    editingNote?.syncImageFileList(this)
 
                     val returnIntent = Intent()
-                    returnIntent.putExtra("note", note)
+                    returnIntent.putExtra("note", editingNote)
                     setResult(EDIT_NOTE_RESULT_CODE, returnIntent)
 
                     super.onBackPressed()
@@ -264,7 +256,7 @@ class NoteDetailActivity : AppCompatActivity() {
         when (requestCode) {
             CAMERA_REQUEST_CODE -> {
                 if (resultCode == RESULT_OK) {
-                    val note = note ?: return
+                    val note = editingNote ?: return
                     val imageName = tempImageFileFromCamera?.name ?: return
                     note.imageList.add(NoteImage(note, imageName))
                     detail_image_thumbnail_list.adapter?.notifyItemChanged(note.imageList.size - 1)
@@ -279,7 +271,7 @@ class NoteDetailActivity : AppCompatActivity() {
                     // 갤러리에서 이미지 가져오기 성공
                     val uri: Uri = data?.data ?: return
                     val imageFileName = FileIOHelper.getFileNameFromUri(this, uri) ?: return
-                    val dstPath = note?.getDirectoryPath(this)
+                    val dstPath = editingNote?.getDirectoryPath(this)
                     Log.d(
                         "yejigallery", "onActivityResult\n" +
                                 "data: $data\n" +
@@ -296,7 +288,7 @@ class NoteDetailActivity : AppCompatActivity() {
                         if (result) {
                             // 이미지 복사 완료
                             runOnUiThread {
-                                val note = note ?: return@runOnUiThread
+                                val note = editingNote ?: return@runOnUiThread
                                 note.imageList.add(NoteImage(note, imageFileName))
                                 detail_image_thumbnail_list.adapter?.notifyItemChanged(note.imageList.size - 1)
                                 Log.d("yejigallery", "이미지 복사 완료: ${System.currentTimeMillis()}, note: $note")
@@ -315,7 +307,7 @@ class NoteDetailActivity : AppCompatActivity() {
     }
 
     fun imageScrollTo(position: Int) {
-        val imageList = note?.imageList ?: return
+        val imageList = editingNote?.imageList ?: return
         val newPosition = when {
             position < 0 -> 0
             position >= imageList.size -> imageList.size - 1
@@ -346,7 +338,7 @@ class NoteDetailActivity : AppCompatActivity() {
 
         // 해당 이미지 삭제
         try {
-            note?.imageList?.removeAt(position)
+            editingNote?.imageList?.removeAt(position)
             detail_image_list.adapter?.notifyItemRemoved(position)
             detail_image_thumbnail_list.adapter?.notifyItemRemoved(position)
             imageScrollTo(position)
@@ -379,7 +371,7 @@ class NoteDetailActivity : AppCompatActivity() {
             detail_text.isCursorVisible = false
 
             val lastModifiedDate =
-                SimpleDateFormat("yyyy년 MM월 dd일 HH:mm:ss").format(note?.modifiedTimestamp) // DateFormat.getDateInstance(DateFormat.LONG).format(Date(note.modifiedTimestamp))
+                SimpleDateFormat("yyyy년 MM월 dd일 HH:mm:ss").format(editingNote?.modifiedTimestamp) // DateFormat.getDateInstance(DateFormat.LONG).format(Date(note.modifiedTimestamp))
             detail_last_modified_date.text =
                 "${resources.getString(R.string.last_modify)}: $lastModifiedDate"
             detail_last_modified_date.visibility = View.VISIBLE
@@ -413,9 +405,9 @@ class NoteDetailActivity : AppCompatActivity() {
                 val inputStream = connection.inputStream
                 val outputStream = FileOutputStream("$path/$filename.png")
                 BitmapFactory.decodeStream(inputStream).compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-                Log.d("yejiurl", "URL로 이미지 불러오기 성공!: $filename, note.imageList.size: ${note?.imageList?.size}")
+                Log.d("yejiurl", "URL로 이미지 불러오기 성공!: $filename, note.imageList.size: ${editingNote?.imageList?.size}")
 
-                val note = note ?: return@Thread
+                val note = editingNote ?: return@Thread
                 val result = note.imageList.add(NoteImage(note, "$filename.png"))
 
                 runOnUiThread {
@@ -447,5 +439,29 @@ class NoteDetailActivity : AppCompatActivity() {
             return if (!connectivityManager.activeNetworkInfo.isConnected) null
             else connectivityManager.activeNetworkInfo.type == ConnectivityManager.TYPE_WIFI
         }
+    }
+
+    // 원본과 비교해서 바뀐게 있는지 확인
+    private fun isChanged(): Boolean {
+        val originNote = originNote ?: return true
+        val editingNote = editingNote ?: return true
+
+        if (editingNote.title != originNote.title)
+            return true
+
+        if (editingNote.text != originNote.text)
+            return true
+
+        if (editingNote.imageList.size != originNote.imageList.size)
+            return true
+
+        if (editingNote.imageList.isNotEmpty()) {
+            for (i in 0 until editingNote.imageList.size) {
+                if (editingNote.imageList[i].name != originNote.imageList[i].name)
+                    return true
+            }
+        }
+
+        return false
     }
 }
