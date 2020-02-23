@@ -3,8 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/image_list_item"
     android:layout_width="match_parent"
-    android:layout_height="200dp"
-    android:layout_margin="16dp">
+    android:layout_height="200dp">
 
     <ImageView
         android:id="@+id/image_list_item_image"
@@ -21,9 +20,9 @@
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_margin="4dp"
-        android:padding="8dp"
         android:background="@drawable/bg_rounded_square_color_red"
+        android:padding="8dp"
         android:src="@drawable/ic_delete_white_24dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

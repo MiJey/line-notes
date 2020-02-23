@@ -146,6 +146,13 @@ class NoteDetailActivity : AppCompatActivity() {
 
             // 외부 링크
             dialogView.add_image_from_link.setOnClickListener {
+                val urlString = dialogView.add_image_url.text.toString()
+
+                if (urlString.isEmpty()) {
+                    Toast.makeText(this, resources.getString(R.string.link_hint), Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
                 if (isWifiConnected(this) == null) {
                     // 네트워크 없음
                     Toast.makeText(this, resources.getString(R.string.no_network), Toast.LENGTH_SHORT).show()
@@ -153,7 +160,6 @@ class NoteDetailActivity : AppCompatActivity() {
                 }
 
                 val imageName = System.currentTimeMillis().toString()
-                val urlString = dialogView.add_image_url.text.toString()
                 writePNGFileFromURL(editingNote.getDirectoryPath(this), imageName, urlString)
                 Toast.makeText(this, resources.getString(R.string.load_image), Toast.LENGTH_SHORT).show()
                 dialog.dismiss()
@@ -243,7 +249,14 @@ class NoteDetailActivity : AppCompatActivity() {
                 .create()
                 .show()
         } else {
-            super.onBackPressed()
+            isLocked = false
+
+            if (isEditMode) {
+                isEditMode = false
+                setLayout()
+            } else {
+                super.onBackPressed()
+            }
         }
     }
 
@@ -259,10 +272,10 @@ class NoteDetailActivity : AppCompatActivity() {
                     val note = editingNote ?: return
                     val imageName = tempImageFileFromCamera?.name ?: return
                     note.imageList.add(NoteImage(note, imageName))
-                    detail_image_thumbnail_list.adapter?.notifyItemChanged(note.imageList.size - 1)
+                    imageScrollTo(note.imageList.size - 1)
                 } else {
-                    Log.d("yejicamera", "카메라로 이미지 가져오기 실패")
-                    Toast.makeText(this, resources.getString(R.string.fail_image), Toast.LENGTH_SHORT).show()
+                    Log.d("yejicamera", "카메라로 이미지 가져오기 실패 또는 취소")
+                    Toast.makeText(this, resources.getString(R.string.cancel_image), Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -290,7 +303,7 @@ class NoteDetailActivity : AppCompatActivity() {
                             runOnUiThread {
                                 val note = editingNote ?: return@runOnUiThread
                                 note.imageList.add(NoteImage(note, imageFileName))
-                                detail_image_thumbnail_list.adapter?.notifyItemChanged(note.imageList.size - 1)
+                                imageScrollTo(note.imageList.size - 1)
                                 Log.d("yejigallery", "이미지 복사 완료: ${System.currentTimeMillis()}, note: $note")
                             }
                         } else {
@@ -299,8 +312,8 @@ class NoteDetailActivity : AppCompatActivity() {
                         }
                     }.start()
                 } else {
-                    Log.d("yejigallery", "갤러리에서 이미지 가져오기 실패")
-                    Toast.makeText(this, resources.getString(R.string.fail_image), Toast.LENGTH_SHORT).show()
+                    Log.d("yejigallery", "갤러리에서 이미지 가져오기 실패 또는 취소")
+                    Toast.makeText(this, resources.getString(R.string.cancel_image), Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -319,8 +332,11 @@ class NoteDetailActivity : AppCompatActivity() {
         var beforePosition = currentImagePosition
         currentImagePosition = newPosition
 
-        if (beforePosition >= imageList.size)
-            beforePosition = imageList.size - 1
+        beforePosition = when {
+            beforePosition < 0 -> 0
+            beforePosition >= imageList.size -> imageList.size - 1
+            else -> beforePosition
+        }
 
         imageList[beforePosition].isSelected = false
         imageList[currentImagePosition].isSelected = true
@@ -370,10 +386,8 @@ class NoteDetailActivity : AppCompatActivity() {
             detail_title.isCursorVisible = false
             detail_text.isCursorVisible = false
 
-            val lastModifiedDate =
-                SimpleDateFormat("yyyy년 MM월 dd일 HH:mm:ss").format(editingNote?.modifiedTimestamp) // DateFormat.getDateInstance(DateFormat.LONG).format(Date(note.modifiedTimestamp))
-            detail_last_modified_date.text =
-                "${resources.getString(R.string.last_modify)}: $lastModifiedDate"
+            val lastModifiedDate = DateHelper.dateString(editingNote?.modifiedTimestamp ?: return)
+            detail_last_modified_date.text = "${resources.getString(R.string.last_modify)}: $lastModifiedDate"
             detail_last_modified_date.visibility = View.VISIBLE
         }
 
@@ -405,17 +419,12 @@ class NoteDetailActivity : AppCompatActivity() {
                 val inputStream = connection.inputStream
                 val outputStream = FileOutputStream("$path/$filename.png")
                 BitmapFactory.decodeStream(inputStream).compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-                Log.d("yejiurl", "URL로 이미지 불러오기 성공!: $filename, note.imageList.size: ${editingNote?.imageList?.size}")
-
-                val note = editingNote ?: return@Thread
-                val result = note.imageList.add(NoteImage(note, "$filename.png"))
 
                 runOnUiThread {
-                    if (result) {
-                        val lastPosition = note.imageList.size - 1
-                        Log.d("yejiurl", "URL로 이미지 불러오기 성공!: $filename, note.imageList.size: ${note.imageList.size}, lastPosition: $lastPosition")
-                        imageScrollTo(lastPosition)
-                    }
+                    Log.d("yejiurl", "URL로 이미지 불러오기 성공!: $filename, note.imageList.size: ${editingNote?.imageList?.size}")
+                    val note = editingNote ?: return@runOnUiThread
+                    note.imageList.add(NoteImage(note, "$filename.png"))
+                    imageScrollTo(note.imageList.size - 1)
                 }
             } catch (e: Exception) {
                 runOnUiThread {

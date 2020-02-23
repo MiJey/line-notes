@@ -25,4 +25,5 @@
     <string name="no_network">네트워크 연결이 필요합니다.</string>
     <string name="load_image">이미지를 가져오는 중입니다.</string>
     <string name="fail_image">이미지를 가져올 수 없습니다.</string>
+    <string name="cancel_image">이미지 가져오기 취소</string>
 </resources>

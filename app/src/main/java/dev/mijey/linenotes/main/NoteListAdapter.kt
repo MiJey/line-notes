@@ -5,12 +5,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import dev.mijey.linenotes.DateHelper
 import dev.mijey.linenotes.Note
 import dev.mijey.linenotes.R
 import dev.mijey.linenotes.detail.NoteDetailActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.note_list_item.view.*
+import java.text.DateFormat
 import java.text.SimpleDateFormat
+import java.util.*
+
 
 class NoteListAdapter(private val mainActivity: MainActivity) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -29,7 +33,7 @@ class NoteListAdapter(private val mainActivity: MainActivity) :
     inner class Item(var mainActivity: MainActivity, itemView: View) :
         RecyclerView.ViewHolder(itemView) {
         fun bindData(note: Note, pos: Int) {
-            itemView.note_list_item_title.text = "$pos ${note.title}"
+            itemView.note_list_item_title.text = note.title
             itemView.note_list_item_text_preview.text = note.text
 
             if (note.imageList.isEmpty()) {
@@ -39,11 +43,9 @@ class NoteListAdapter(private val mainActivity: MainActivity) :
                 itemView.note_list_item_thumbnail.visibility = View.VISIBLE
             }
 
-            // TODO 오늘 변경사항은 날짜 말고 시간으로 보여주기
-            val createdDate =
-                SimpleDateFormat("yyyy년 MM월 dd일 HH:mm:ss").format(note.createdTimestamp) // DateFormat.getDateInstance(DateFormat.LONG).format(Date(note.createdTimestamp))
-            val modifiedDate =
-                SimpleDateFormat("yyyy년 MM월 dd일 HH:mm:ss").format(note.modifiedTimestamp) // DateFormat.getDateInstance(DateFormat.LONG).format(Date(note.modifiedTimestamp))
+            val createdDate = DateHelper.dateString(note.createdTimestamp)
+            val modifiedDate = DateHelper.dateString(note.modifiedTimestamp)
+
             itemView.note_list_item_date.text =
                 "${mainActivity.resources.getString(R.string.modified_date)}: $modifiedDate / ${mainActivity.resources.getString(
                     R.string.created_date
