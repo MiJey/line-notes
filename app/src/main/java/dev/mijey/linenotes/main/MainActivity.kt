@@ -2,9 +2,11 @@ package dev.mijey.linenotes.main
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import dev.mijey.linenotes.*
@@ -38,34 +40,76 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity() {
 
     private var noteDB: NoteDatabase? = null
-    private var noteList: LiveData<List<Note>>? = null
     private var mNoteViewModel: NoteViewModel? = null
     private var mNoteListAdapter: NoteListAdapter? = null
 
     var isEditMode = false
-    set(value) {
-        field = value
+        set(value) {
+            // 삭제 작업 도중 삭제 버튼 여러번 누르는 것 방지
+            if (field == value) return
+            field = value
 
-        if (isEditMode) {
-            main_tool_bar_action_button.text = resources.getString(R.string.delete)
-        } else {
-            // 선택한 노트 삭제
-//                val iter = noteList.iterator()
-//                while (iter.hasNext()) {
-//                    if (iter.next().isSelected)
-//                        iter.remove()
-//                }
+            if (value) {
+                isEditMode = true
+                main_tool_bar_action_button.text = resources.getString(R.string.delete)
+                note_list.adapter?.notifyDataSetChanged()
+            } else {
+                // 선택한 노트 삭제 확인
+                val notes = mNoteViewModel?.getAllNotes()?.value ?: return
 
-            main_tool_bar_action_button.text = resources.getString(R.string.edit)
+                Thread {
+                    var count = 0
+                    for (note in notes) {
+                        if (note.isSelected)
+                            count += 1
+                    }
+
+                    // 선택한 메모가 없음 -> 편집 모드에서 빠져나가기
+                    if (count == 0) {
+                        Handler(Looper.getMainLooper()).post {
+                            isEditMode = false
+                            main_tool_bar_action_button.text = resources.getString(R.string.edit)
+                            note_list.adapter?.notifyDataSetChanged()
+                        }
+                        return@Thread
+                    }
+
+                    Handler(Looper.getMainLooper()).post {
+                        AlertDialog.Builder(this)
+                            .setMessage(String.format(resources.getString(R.string.delete_confirm), count))
+                            .setPositiveButton(resources.getString(R.string.delete)) { dialog, id ->
+                                Thread {
+                                    // 선택한 노트 삭제
+                                    for (note in notes) {
+                                        Log.d("yejimain", "노트 삭제: $note, isSelected: ${note.isSelected}")
+                                        if (note.isSelected)
+                                            mNoteViewModel?.delete(note)
+                                    }
+
+                                    Handler(Looper.getMainLooper()).post {
+                                        // 삭제 완료 후 편집 모드에서 빠져나가기
+                                        isEditMode = false
+                                        main_tool_bar_action_button.text = resources.getString(R.string.edit)
+                                    }
+                                }.start()
+                            }
+                            .setNegativeButton(resources.getString(R.string.cancel)) { dialog, id ->
+                                // 편집 모드에 남아있기
+                                isEditMode = true
+                            }
+                            .create()
+                            .show()
+                    }
+                }.start()
+            }
         }
-
-        note_list.adapter?.notifyDataSetChanged()
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // DB에서 노트 가져오기
+        noteDB = NoteDatabase.getInstance(this)
         mNoteViewModel = ViewModelProvider(this)[NoteViewModel::class.java]
 
         mNoteListAdapter = NoteListAdapter(this)
@@ -76,13 +120,6 @@ class MainActivity : AppCompatActivity() {
             Observer<List<Note>> { notes ->
                 mNoteListAdapter?.setNotes(notes)
             })
-
-        // DB 가져오기
-        noteDB = NoteDatabase.getInstance(this)
-
-        Thread {
-            noteList = noteDB?.noteDao()?.getAll() ?: return@Thread
-        }.start()
 
         // 편집, 삭제
         main_tool_bar_action_button.setOnClickListener {
@@ -109,6 +146,11 @@ class MainActivity : AppCompatActivity() {
         } else {
             super.onBackPressed()
         }
+    }
+
+    override fun onDestroy() {
+        NoteDatabase.destroyInstance()
+        super.onDestroy()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

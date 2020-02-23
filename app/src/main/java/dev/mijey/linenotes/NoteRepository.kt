@@ -25,4 +25,15 @@ class NoteRepository(application: Application) {
             return null
         }
     }
+
+    fun delete(note: Note) {
+        DeleteAsyncTask(mNoteDao).execute(note)
+    }
+
+    private class DeleteAsyncTask(val mAsyncTaskDao: NoteDao?) : AsyncTask<Note?, Void?, Void?>() {
+        override fun doInBackground(vararg params: Note?): Void? {
+            mAsyncTaskDao!!.delete(params[0] ?: return null)
+            return null
+        }
+    }
 }
