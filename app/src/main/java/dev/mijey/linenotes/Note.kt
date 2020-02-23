@@ -1,5 +1,6 @@
 package dev.mijey.linenotes
 
+import android.content.Context
 import android.os.Parcel
 import android.os.Parcelable
 import android.util.Log
@@ -7,6 +8,7 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
+import java.io.File
 
 @Entity
 @TypeConverters(Converters::class)
@@ -49,6 +51,27 @@ data class Note(
                 imageList.add(NoteImage(this, imageName))
             }
         }
+    }
+
+    fun createDirectoryFromTemp(context: Context) {
+        // 임시 폴더 이름을 바꿔서 노트에 종속시키기
+        val tempDirectoryPath = "${context.filesDir.path}/0"
+        val noteDirectoryPath = getDirectoryPath(context)
+        FileIOHelper.rename(tempDirectoryPath, noteDirectoryPath)
+    }
+
+    fun getDirectory(context: Context): File? {
+        val noteDirectory = File(getDirectoryPath(context))
+        if (!noteDirectory.exists()) {
+            if (!noteDirectory.mkdirs())
+                return null
+        }
+
+        return noteDirectory
+    }
+
+    fun getDirectoryPath(context: Context): String {
+        return "${context.filesDir.path}/$createdTimestamp"
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {

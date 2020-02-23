@@ -47,7 +47,7 @@ class ImageThumbnailListAdapter(
 
             itemView.image_thumbnail_list_item.setOnClickListener {
                 Log.d("yejithumbnail", "썸네일 클릭 pos: $pos")
-                noteDetailActivity.detail_image_list.smoothScrollToPosition(pos)
+                noteDetailActivity.imageScrollTo(pos)
             }
         }
     }

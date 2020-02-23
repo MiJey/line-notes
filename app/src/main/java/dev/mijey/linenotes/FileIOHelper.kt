@@ -2,15 +2,10 @@ package dev.mijey.linenotes
 
 import android.content.ContentResolver
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.OpenableColumns
-import android.util.Log
-import dev.mijey.linenotes.detail.NoteDetailActivity
 import java.io.File
 import java.io.FileOutputStream
-import java.net.HttpURLConnection
 
 
 object FileIOHelper {
@@ -69,5 +64,14 @@ object FileIOHelper {
         }
 
         return false    // 파일 저장 실패
+    }
+
+    fun rename(srcPathName: String?, dstPathName: String?): Boolean {
+        srcPathName ?: return false
+        dstPathName ?: return false
+
+        val from = File(srcPathName)
+        val to = File(dstPathName)
+        return from.parentFile.exists() && from.exists() && from.renameTo(to)
     }
 }
